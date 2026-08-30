@@ -1,0 +1,6 @@
+{
+  "name": "Chikeechi Board Games",
+  "description": "池記桌遊 - A modern and vibrant board game store website based in Hong Kong featuring quick quotes, collections, and contact information.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
