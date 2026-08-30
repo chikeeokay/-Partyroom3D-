@@ -25,8 +25,10 @@ import MahjongSection from './components/MahjongSection';
 import PrintingSection from './components/PrintingSection';
 import PosterUploaderStudio from './components/PosterUploaderStudio';
 import VenuePhotoStudio from './components/VenuePhotoStudio';
+import AdminLoginModal from './components/AdminLoginModal';
 import { BoardGameEvent, VenuePhoto } from './types';
 import { BOARD_GAME_EVENTS as DEFAULT_EVENTS, VENUE_PHOTOS as DEFAULT_VENUE_PHOTOS } from './data';
+import { Lock, LogOut, ShieldCheck } from 'lucide-react';
 
 interface FAQItem {
   question: string;
@@ -62,6 +64,35 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('venue');
   const [isStudioOpen, setIsStudioOpen] = useState(false);
   const [isPhotoStudioOpen, setIsPhotoStudioOpen] = useState(false);
+  
+  // Owner Admin Authentication State
+  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('admin') === 'true' || params.get('owner') === 'true') {
+          localStorage.setItem('chikee_is_admin', 'true');
+          return true;
+        }
+        return localStorage.getItem('chikee_is_admin') === 'true';
+      }
+    } catch (e) {
+      console.warn('Failed to parse admin state', e);
+    }
+    return false;
+  });
+  const [isAdminLoginModalOpen, setIsAdminLoginModalOpen] = useState(false);
+
+  const handleAdminLogout = () => {
+    try {
+      localStorage.removeItem('chikee_is_admin');
+    } catch (e) {
+      console.warn('Logout storage failed', e);
+    }
+    setIsAdmin(false);
+    setIsStudioOpen(false);
+    setIsPhotoStudioOpen(false);
+  };
 
   // Dynamic Events State with LocalStorage Persistence
   const [events, setEvents] = useState<BoardGameEvent[]>(() => {
@@ -166,9 +197,43 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#faf5ea] text-slate-800 selection:bg-amber-100 selection:text-amber-900 scroll-smooth font-sans">
       
+      {/* OWNER ADMIN STATUS BAR (Visible only when logged in as Owner) */}
+      {isAdmin && (
+        <div className="bg-slate-950 text-amber-300 px-4 py-2 text-xs font-black flex flex-wrap items-center justify-between gap-2 border-b-2 border-amber-400 z-50 sticky top-0">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-amber-400 animate-pulse" />
+            <span>👑 池記店長管理模式中 (Admin Mode Active)</span>
+            <span className="hidden sm:inline text-slate-400 font-normal">| 一般訪客不會看到上傳按鈕</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsPhotoStudioOpen(true)}
+              className="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-lg text-xs font-black flex items-center gap-1 cursor-pointer transition-colors"
+            >
+              <span>📸 場相排版後台</span>
+            </button>
+            <button
+              onClick={() => setIsStudioOpen(true)}
+              className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg text-xs font-black flex items-center gap-1 cursor-pointer transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+              <span>📅 活動發佈後台</span>
+            </button>
+            <button
+              onClick={handleAdminLogout}
+              className="px-2 py-1 bg-slate-800 hover:bg-rose-900 text-rose-300 hover:text-white rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors border border-slate-700"
+              title="退出店長模式"
+            >
+              <LogOut className="w-3 h-3" />
+              <span>登出</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* HEADER / NAVIGATION - Styled to match Canva orange/cream aesthetics with dashed tabs */}
       <header 
-        className={`sticky top-0 left-0 right-0 z-40 transition-all duration-300 bg-[#ffa01b] border-b-[3px] border-[#0f172a] ${
+        className={`sticky ${isAdmin ? 'top-8' : 'top-0'} left-0 right-0 z-40 transition-all duration-300 bg-[#ffa01b] border-b-[3px] border-[#0f172a] ${
           scrolled ? 'shadow-sm' : ''
         }`}
       >
@@ -303,36 +368,38 @@ export default function App() {
                   <span>⚙</span> 3D打印維修工作室
                 </button>
                 
-                {/* Studio Triggers in Mobile Menu */}
-                <div className="flex flex-col gap-1.5 pt-1">
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      setIsPhotoStudioOpen(true);
-                    }}
-                    className="w-full text-left px-3 py-2.5 rounded-xl bg-orange-100/80 text-orange-950 font-black transition-all flex items-center justify-between border border-orange-300"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="text-base">📸</span>
-                      <span>場相上傳 / 自由排版後台</span>
-                    </span>
-                    <span className="text-[10px] bg-orange-500 text-white px-1.5 py-0.5 rounded font-black">Admin</span>
-                  </button>
+                {/* Studio Triggers in Mobile Menu - Only for Admin */}
+                {isAdmin && (
+                  <div className="flex flex-col gap-1.5 pt-1">
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        setIsPhotoStudioOpen(true);
+                      }}
+                      className="w-full text-left px-3 py-2.5 rounded-xl bg-orange-100/80 text-orange-950 font-black transition-all flex items-center justify-between border border-orange-300"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="text-base">📸</span>
+                        <span>場相上傳 / 自由排版後台</span>
+                      </span>
+                      <span className="text-[10px] bg-orange-500 text-white px-1.5 py-0.5 rounded font-black">Admin</span>
+                    </button>
 
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      setIsStudioOpen(true);
-                    }}
-                    className="w-full text-left px-3 py-2.5 rounded-xl bg-amber-100/70 text-amber-950 font-black transition-all flex items-center justify-between border border-amber-300"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-amber-600" />
-                      <span>海報上傳 / 活動發佈後台</span>
-                    </span>
-                    <span className="text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded font-black">Admin</span>
-                  </button>
-                </div>
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        setIsStudioOpen(true);
+                      }}
+                      className="w-full text-left px-3 py-2.5 rounded-xl bg-amber-100/70 text-amber-950 font-black transition-all flex items-center justify-between border border-amber-300"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-600" />
+                        <span>海報上傳 / 活動發佈後台</span>
+                      </span>
+                      <span className="text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded font-black">Admin</span>
+                    </button>
+                  </div>
+                )}
                 
                 <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
                   <a
@@ -389,16 +456,16 @@ export default function App() {
         </div>
       </section>
 
-      {/* SECTION 1: VENUE & BOARD GAME PHOTOS */}
+      {/* SECTION 1: VENUE & BOARD GAME PHOTOS (Upload studio only available for logged-in Admin) */}
       <VenueSection 
         photos={venuePhotos}
-        onOpenPhotoStudio={() => setIsPhotoStudioOpen(true)}
+        onOpenPhotoStudio={isAdmin ? () => setIsPhotoStudioOpen(true) : undefined}
       />
 
-      {/* SECTION 2: EVENTS INFORMATION */}
+      {/* SECTION 2: EVENTS INFORMATION (Event studio only available for logged-in Admin) */}
       <EventsSection 
         events={events} 
-        onOpenStudio={() => setIsStudioOpen(true)} 
+        onOpenStudio={isAdmin ? () => setIsStudioOpen(true) : undefined} 
       />
 
       {/* SECTION 3: TAIWANESE MAHJONG RESEARCH STUDIO */}
@@ -421,6 +488,13 @@ export default function App() {
         onClose={() => setIsPhotoStudioOpen(false)}
         photos={venuePhotos}
         onUpdatePhotos={handleUpdateVenuePhotos}
+      />
+
+      {/* ADMIN LOGIN MODAL */}
+      <AdminLoginModal 
+        isOpen={isAdminLoginModalOpen}
+        onClose={() => setIsAdminLoginModalOpen(false)}
+        onLoginSuccess={() => setIsAdmin(true)}
       />
 
       {/* FOOTER - Professional & localized */}
@@ -454,36 +528,67 @@ export default function App() {
             </div>
           </div>
 
-          <div className="pt-8 border-t border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-4 text-sm md:text-base font-bold text-slate-500 text-center">
+          <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm font-bold text-slate-500">
             <p>© {new Date().getFullYear()} 池記桌遊 Chikeechi. All rights reserved.</p>
+            
+            {/* Discreet Admin Login / Status Trigger in Footer */}
+            <div className="flex items-center gap-3 text-xs">
+              {isAdmin ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-amber-400 font-black flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>店長已登入</span>
+                  </span>
+                  <button
+                    onClick={handleAdminLogout}
+                    className="text-rose-400 hover:text-rose-300 underline font-bold cursor-pointer"
+                  >
+                    登出管理
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsAdminLoginModalOpen(true)}
+                  className="text-slate-600 hover:text-amber-400 transition-colors flex items-center gap-1 cursor-pointer font-bold"
+                  title="僅供店主上傳管理"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>店長登入</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </footer>
 
-      {/* FLOATING QUICK CONNECT BUTTONS (Photo Studio + Event Studio + WhatsApp + Instagram) */}
+      {/* FLOATING QUICK CONNECT BUTTONS (Studio buttons only appear for logged-in Admin) */}
       <div className="fixed bottom-6 right-6 z-30 flex flex-col items-end gap-2.5">
         
-        {/* Venue Photo Studio Quick Trigger Floating Button */}
-        <button
-          onClick={() => setIsPhotoStudioOpen(true)}
-          className="bg-slate-900 text-white hover:bg-slate-800 text-xs font-black px-3.5 py-2 rounded-full border-2 border-orange-400 shadow-xl flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 active:scale-95 group"
-          title="開啟場相及桌遊相片排版後台"
-        >
-          <span className="text-sm group-hover:scale-110 transition-transform">📸</span>
-          <span className="hidden sm:inline">上傳場相 / 自由排版</span>
-          <span className="sm:hidden">上傳場相</span>
-        </button>
+        {/* Venue Photo Studio Quick Trigger (Admin Only) */}
+        {isAdmin && (
+          <button
+            onClick={() => setIsPhotoStudioOpen(true)}
+            className="bg-slate-900 text-white hover:bg-slate-800 text-xs font-black px-3.5 py-2 rounded-full border-2 border-orange-400 shadow-xl flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 active:scale-95 group animate-fadeIn"
+            title="開啟場相及桌遊相片排版後台"
+          >
+            <span className="text-sm group-hover:scale-110 transition-transform">📸</span>
+            <span className="hidden sm:inline">上傳場相 / 自由排版</span>
+            <span className="sm:hidden">上傳場相</span>
+          </button>
+        )}
 
-        {/* Poster Studio Quick Trigger Floating Button */}
-        <button
-          onClick={() => setIsStudioOpen(true)}
-          className="bg-slate-900 text-white hover:bg-slate-800 text-xs font-black px-3.5 py-2 rounded-full border-2 border-amber-400 shadow-xl flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 active:scale-95 group"
-          title="開啟活動海報發佈後台"
-        >
-          <Sparkles className="w-4 h-4 text-amber-400 group-hover:rotate-12 transition-transform" />
-          <span className="hidden sm:inline">發佈活動 / 海報生成</span>
-          <span className="sm:hidden">發佈活動</span>
-        </button>
+        {/* Poster Studio Quick Trigger (Admin Only) */}
+        {isAdmin && (
+          <button
+            onClick={() => setIsStudioOpen(true)}
+            className="bg-slate-900 text-white hover:bg-slate-800 text-xs font-black px-3.5 py-2 rounded-full border-2 border-amber-400 shadow-xl flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 active:scale-95 group animate-fadeIn"
+            title="開啟活動海報發佈後台"
+          >
+            <Sparkles className="w-4 h-4 text-amber-400 group-hover:rotate-12 transition-transform" />
+            <span className="hidden sm:inline">發佈活動 / 海報生成</span>
+            <span className="sm:hidden">發佈活動</span>
+          </button>
+        )}
 
         {/* Instagram Float Bubble */}
         <a
