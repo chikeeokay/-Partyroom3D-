@@ -1,8 +1,17 @@
 import React from 'react';
-import { BOARD_GAME_EVENTS } from '../data';
-import { MessageCircle, Star, Calendar, Clock, DollarSign, ArrowRight, Sparkles, Smile } from 'lucide-react';
+import { BoardGameEvent } from '../types';
+import { BOARD_GAME_EVENTS as DEFAULT_EVENTS } from '../data';
+import { MessageCircle, Star, Calendar, Clock, DollarSign, ArrowRight, Sparkles, Plus, Image as ImageIcon } from 'lucide-react';
 
-export default function EventsSection() {
+interface EventsSectionProps {
+  events?: BoardGameEvent[];
+  onOpenStudio?: () => void;
+}
+
+export default function EventsSection({ 
+  events = DEFAULT_EVENTS,
+  onOpenStudio
+}: EventsSectionProps) {
   
   const handleRegisterEvent = (eventTitle: string) => {
     const msg = `您好池記！我想報名參加這個活動：\n\n🎯 活動：${eventTitle}\n\n請幫我預留名額，並告知入數/付款安排，謝謝！🦊`;
@@ -16,16 +25,29 @@ export default function EventsSection() {
       
       <div className="w-full flex flex-col gap-2">
         
-        {/* Header Title */}
-        <div className="text-center max-w-2xl mx-auto flex flex-col items-center gap-1 mt-2">
+        {/* Header Title & Studio Action Button */}
+        <div className="text-center max-w-2xl mx-auto flex flex-col items-center gap-2 mt-3 px-4">
           <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 m-0">
             池記最新桌遊活動
           </h2>
+
+          {/* Quick Trigger Button for Poster Studio */}
+          {onOpenStudio && (
+            <button
+              onClick={onOpenStudio}
+              className="mt-1 px-4 py-2 bg-[#f4f8d3] hover:bg-white text-slate-950 text-xs sm:text-sm font-black rounded-xl border-[2.5px] border-slate-900 shadow-sm hover:shadow-md transition-all flex items-center gap-2 cursor-pointer hover:-translate-y-0.5"
+              style={{ borderStyle: 'dashed' }}
+            >
+              <Sparkles className="w-4 h-4 text-amber-600 animate-pulse" />
+              <span>📸 上傳海報自動發佈新活動 (Poster Studio)</span>
+              <Plus className="w-4 h-4 text-slate-900 ml-0.5" />
+            </button>
+          )}
         </div>
 
         {/* Events Cards Grid */}
-        <div className="flex flex-col gap-3 mt-2 max-w-3xl mx-auto w-full px-0 sm:px-4">
-          {BOARD_GAME_EVENTS.map((event) => (
+        <div className="flex flex-col gap-4 mt-2 max-w-3xl mx-auto w-full px-0 sm:px-4">
+          {events.map((event) => (
             <div 
               key={event.id}
               className="bg-[#faf5ea] rounded-none sm:rounded-[2rem] border-y-[3px] sm:border-[3px] border-slate-900 hover:border-amber-400 hover:shadow-xs transition-all flex flex-col justify-between overflow-hidden"
@@ -42,7 +64,7 @@ export default function EventsSection() {
                   />
                   {/* Badge */}
                   {event.badge && (
-                    <span className={`absolute top-4 left-4 text-xs font-black px-3 py-1.5 rounded-md tracking-wider shadow-sm ${event.badgeBg}`}>
+                    <span className={`absolute top-4 left-4 text-xs font-black px-3 py-1.5 rounded-md tracking-wider shadow-sm ${event.badgeBg || 'bg-amber-400 text-slate-950'}`}>
                       {event.badge}
                     </span>
                   )}

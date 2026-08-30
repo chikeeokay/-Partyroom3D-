@@ -1,4 +1,4 @@
-import { CatStaff, VenueRoom, BoardGameEvent, MahjongRule, PrintingShowcase } from './types';
+import { CatStaff, VenueRoom, BoardGameEvent, MahjongRule, PrintingShowcase, VenuePhoto } from './types';
 
 export const CAT_STAFF: CatStaff[] = [
   {
@@ -164,5 +164,68 @@ export const PRINTING_SHOWCASE_ITEMS: PrintingShowcase[] = [
     description: '趣味創意的 3D 打印日常潮玩配件。亮黃色三角龍多功能桌面擺設，尾部可容納水筆或工具，背部提供舒適的角度用作手機支架或卡牌展示架，為您的書桌增添亮麗色彩！',
     imageUrl: 'https://images.unsplash.com/photo-1535223289827-42f1e9919769?q=80&w=600&auto=format&fit=crop',
     specs: '材料: 優質 PETG ‧ 特點: 一體化打印, 穩固耐摔'
+  }
+];
+
+export const VENUE_PHOTOS: VenuePhoto[] = [
+  {
+    id: 'photo-1',
+    title: '大場 ‧ 700呎溫馨長桌與500+桌遊藏書牆',
+    category: 'main_hall',
+    imageUrl: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1000&auto=format&fit=crop',
+    description: '實木超大長桌，支援 10-18 人同場開局！背靠整面 500+ 款各類熱門與絕版桌遊藏書牆。',
+    tags: ['大場', '超大長桌', '500款桌遊牆', '寬敞明亮'],
+    featured: true,
+    date: '2025-2026'
+  },
+  {
+    id: 'photo-2',
+    title: '細房 ‧ 獨立隔音電動麻將包廂',
+    category: 'small_room',
+    imageUrl: 'https://images.unsplash.com/photo-1601987177651-8edfe6c20009?q=80&w=1000&auto=format&fit=crop',
+    description: '配備頂級 42號/36號 全自動電動麻將機，設有隔音包廂、獨立沙發電視及冷氣。',
+    tags: ['細房', '電動麻將機', '獨立包廂', '隔音私密'],
+    featured: true,
+    date: '2025-2026'
+  },
+  {
+    id: 'photo-3',
+    title: '桌遊藏書 ‧ 豐富多樣策略與歡樂派對遊戲',
+    category: 'boardgames',
+    imageUrl: 'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?q=80&w=1000&auto=format&fit=crop',
+    description: '由池記精心收藏的數百款桌遊，包含重策《夏克頓》、《五大部落》、《北灣漁村》到各類輕鬆小品。',
+    tags: ['桌遊相片', '策略桌遊', '派對歡樂', '店主親授'],
+    featured: true,
+    date: '2025-2026'
+  },
+  {
+    id: 'photo-4',
+    title: '店貓日常 ‧ 靈魂店長阿池與肥橘監工中',
+    category: 'cat',
+    imageUrl: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=1000&auto=format&fit=crop',
+    description: '常駐大場與電動麻將機出牌口的店貓阿池，隨時陪伴各位玩家一同開局與放鬆。',
+    tags: ['店貓日常', '阿池', '肥橘', '寵物友善'],
+    featured: false,
+    date: '2025-2026'
+  },
+  {
+    id: 'photo-5',
+    title: '大場 ‧ 電子飛鏢機與 Switch 娛樂打機專區',
+    category: 'main_hall',
+    imageUrl: 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?q=80&w=1000&auto=format&fit=crop',
+    description: '專業聯網電子飛鏢機與高清大電視 Switch 遊戲專區，桌遊休息時隨時開局！',
+    tags: ['大場', '電子飛鏢', 'Switch打機', '沙發放鬆'],
+    featured: false,
+    date: '2025-2026'
+  },
+  {
+    id: 'photo-6',
+    title: '細房 ‧ 沉浸式狼人殺/血染鐘樓配置',
+    category: 'small_room',
+    imageUrl: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?q=80&w=1000&auto=format&fit=crop',
+    description: '專屬氛圍燈光與說書人專用魔典面具，享受無干擾的極致推理體驗。',
+    tags: ['細房', '血染鐘樓', '狼人殺', '私密隔音'],
+    featured: false,
+    date: '2025-2026'
   }
 ];

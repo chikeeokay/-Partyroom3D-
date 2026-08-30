@@ -23,6 +23,10 @@ import VenueSection from './components/VenueSection';
 import EventsSection from './components/EventsSection';
 import MahjongSection from './components/MahjongSection';
 import PrintingSection from './components/PrintingSection';
+import PosterUploaderStudio from './components/PosterUploaderStudio';
+import VenuePhotoStudio from './components/VenuePhotoStudio';
+import { BoardGameEvent, VenuePhoto } from './types';
+import { BOARD_GAME_EVENTS as DEFAULT_EVENTS, VENUE_PHOTOS as DEFAULT_VENUE_PHOTOS } from './data';
 
 interface FAQItem {
   question: string;
@@ -56,6 +60,58 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('venue');
+  const [isStudioOpen, setIsStudioOpen] = useState(false);
+  const [isPhotoStudioOpen, setIsPhotoStudioOpen] = useState(false);
+
+  // Dynamic Events State with LocalStorage Persistence
+  const [events, setEvents] = useState<BoardGameEvent[]>(() => {
+    try {
+      const saved = localStorage.getItem('chikee_boardgame_events');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load events from storage', e);
+    }
+    return DEFAULT_EVENTS;
+  });
+
+  const handleUpdateEvents = (newEvents: BoardGameEvent[]) => {
+    setEvents(newEvents);
+    try {
+      localStorage.setItem('chikee_boardgame_events', JSON.stringify(newEvents));
+    } catch (e) {
+      console.warn('Failed to save events to storage', e);
+    }
+  };
+
+  // Dynamic Venue Photos State with LocalStorage Persistence
+  const [venuePhotos, setVenuePhotos] = useState<VenuePhoto[]>(() => {
+    try {
+      const saved = localStorage.getItem('chikee_venue_photos');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load venue photos from storage', e);
+    }
+    return DEFAULT_VENUE_PHOTOS;
+  });
+
+  const handleUpdateVenuePhotos = (newPhotos: VenuePhoto[]) => {
+    setVenuePhotos(newPhotos);
+    try {
+      localStorage.setItem('chikee_venue_photos', JSON.stringify(newPhotos));
+    } catch (e) {
+      console.warn('Failed to save venue photos to storage', e);
+    }
+  };
 
   // Scroll effect for navbar
   useEffect(() => {
@@ -247,6 +303,37 @@ export default function App() {
                   <span>⚙</span> 3D打印維修工作室
                 </button>
                 
+                {/* Studio Triggers in Mobile Menu */}
+                <div className="flex flex-col gap-1.5 pt-1">
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsPhotoStudioOpen(true);
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded-xl bg-orange-100/80 text-orange-950 font-black transition-all flex items-center justify-between border border-orange-300"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="text-base">📸</span>
+                      <span>場相上傳 / 自由排版後台</span>
+                    </span>
+                    <span className="text-[10px] bg-orange-500 text-white px-1.5 py-0.5 rounded font-black">Admin</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsStudioOpen(true);
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded-xl bg-amber-100/70 text-amber-950 font-black transition-all flex items-center justify-between border border-amber-300"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-600" />
+                      <span>海報上傳 / 活動發佈後台</span>
+                    </span>
+                    <span className="text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded font-black">Admin</span>
+                  </button>
+                </div>
+                
                 <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
                   <a
                     href="https://www.instagram.com/boardgameschi/"
@@ -303,16 +390,38 @@ export default function App() {
       </section>
 
       {/* SECTION 1: VENUE & BOARD GAME PHOTOS */}
-      <VenueSection />
+      <VenueSection 
+        photos={venuePhotos}
+        onOpenPhotoStudio={() => setIsPhotoStudioOpen(true)}
+      />
 
       {/* SECTION 2: EVENTS INFORMATION */}
-      <EventsSection />
+      <EventsSection 
+        events={events} 
+        onOpenStudio={() => setIsStudioOpen(true)} 
+      />
 
       {/* SECTION 3: TAIWANESE MAHJONG RESEARCH STUDIO */}
       <MahjongSection />
 
       {/* SECTION 4: 3D PRINTING WORKSHOP */}
       <PrintingSection />
+
+      {/* POSTER UPLOADER & EVENT MANAGEMENT STUDIO MODAL */}
+      <PosterUploaderStudio 
+        isOpen={isStudioOpen}
+        onClose={() => setIsStudioOpen(false)}
+        events={events}
+        onUpdateEvents={handleUpdateEvents}
+      />
+
+      {/* VENUE PHOTO & AUTO-LAYOUT STUDIO MODAL */}
+      <VenuePhotoStudio 
+        isOpen={isPhotoStudioOpen}
+        onClose={() => setIsPhotoStudioOpen(false)}
+        photos={venuePhotos}
+        onUpdatePhotos={handleUpdateVenuePhotos}
+      />
 
       {/* FOOTER - Professional & localized */}
       <footer className="bg-slate-900 text-slate-300 py-12 border-t-2 border-slate-950 w-full">
@@ -351,9 +460,31 @@ export default function App() {
         </div>
       </footer>
 
-      {/* FLOATING QUICK CONNECT BUTTONS (WhatsApp + Instagram) */}
+      {/* FLOATING QUICK CONNECT BUTTONS (Photo Studio + Event Studio + WhatsApp + Instagram) */}
       <div className="fixed bottom-6 right-6 z-30 flex flex-col items-end gap-2.5">
         
+        {/* Venue Photo Studio Quick Trigger Floating Button */}
+        <button
+          onClick={() => setIsPhotoStudioOpen(true)}
+          className="bg-slate-900 text-white hover:bg-slate-800 text-xs font-black px-3.5 py-2 rounded-full border-2 border-orange-400 shadow-xl flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 active:scale-95 group"
+          title="開啟場相及桌遊相片排版後台"
+        >
+          <span className="text-sm group-hover:scale-110 transition-transform">📸</span>
+          <span className="hidden sm:inline">上傳場相 / 自由排版</span>
+          <span className="sm:hidden">上傳場相</span>
+        </button>
+
+        {/* Poster Studio Quick Trigger Floating Button */}
+        <button
+          onClick={() => setIsStudioOpen(true)}
+          className="bg-slate-900 text-white hover:bg-slate-800 text-xs font-black px-3.5 py-2 rounded-full border-2 border-amber-400 shadow-xl flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 active:scale-95 group"
+          title="開啟活動海報發佈後台"
+        >
+          <Sparkles className="w-4 h-4 text-amber-400 group-hover:rotate-12 transition-transform" />
+          <span className="hidden sm:inline">發佈活動 / 海報生成</span>
+          <span className="sm:hidden">發佈活動</span>
+        </button>
+
         {/* Instagram Float Bubble */}
         <a
           href="https://www.instagram.com/boardgameschi/"

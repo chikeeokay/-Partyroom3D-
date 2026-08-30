@@ -47,3 +47,16 @@ export interface PrintingShowcase {
   imageUrl: string;
   specs?: string;
 }
+
+export type VenuePhotoCategory = 'main_hall' | 'small_room' | 'boardgames' | 'cat' | 'facilities';
+
+export interface VenuePhoto {
+  id: string;
+  title: string;
+  category: VenuePhotoCategory;
+  imageUrl: string;
+  description?: string;
+  tags?: string[];
+  featured?: boolean;
+  date?: string;
+}
