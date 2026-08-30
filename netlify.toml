@@ -1,0 +1,13 @@
+[build]
+  # The directory that contains the compiled site
+  publish = "dist"
+
+  # The command to run to build the site
+  command = "npm run build"
+
+# Catch-all redirect for Single Page Applications (SPA)
+# This ensures that if you refresh on a sub-page, it routes to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
