@@ -46,6 +46,8 @@ export default function VenuePhotoStudio({
   const [description, setDescription] = useState('');
   const [tagInput, setTagInput] = useState('大場, 實木長桌, 500款桌遊');
   const [imageUrl, setImageUrl] = useState('');
+  const [previewDataUrl, setPreviewDataUrl] = useState('');
+  const [autoPublishOnUpload, setAutoPublishOnUpload] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
   
   // Batch upload & Persist state
@@ -107,7 +109,8 @@ export default function VenuePhotoStudio({
     setDescription(preset.description);
     setTagInput(preset.tags);
     setImageUrl(preset.imageUrl);
-    showToast('已套用範本相片！您可以立即儲存或修改。');
+    setPreviewDataUrl(preset.imageUrl);
+    showToast(`已套用「${preset.title}」範本！點擊右側【🚀 立即發佈】即可生效`);
   };
 
   // Core: Directly writes photos into src/data.ts source code & saves files to public/uploads
@@ -149,33 +152,39 @@ export default function VenuePhotoStudio({
     const reader = new FileReader();
     reader.onload = async (event) => {
       const base64 = event.target?.result as string;
+      // Immediately set preview so user sees instant feedback with 0 latency
+      setPreviewDataUrl(base64);
 
       // Auto deduce title and category from filename
       const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
       let deducedCategory = category;
+      let deducedTitle = title;
+      let deducedTags = tagInput;
+
       if (!title) {
         if (/大場|main|hall|table/i.test(cleanName)) {
-          setTitle(`大場 ‧ ${cleanName}`);
-          setCategory('main_hall');
+          deducedTitle = `大場 ‧ ${cleanName}`;
           deducedCategory = 'main_hall';
-          setTagInput('大場, 聚會空間, 實木長桌');
+          deducedTags = '大場, 聚會空間, 實木長桌';
         } else if (/細房|room|mahjong|麻雀|麻將/i.test(cleanName)) {
-          setTitle(`細房 ‧ ${cleanName}`);
-          setCategory('small_room');
+          deducedTitle = `細房 ‧ ${cleanName}`;
           deducedCategory = 'small_room';
-          setTagInput('細房, 電動麻將, 獨立包廂');
+          deducedTags = '細房, 電動麻將, 獨立包廂';
         } else if (/cat|貓|阿池|肥橘/i.test(cleanName)) {
-          setTitle(`店貓日常 ‧ ${cleanName}`);
-          setCategory('cat');
+          deducedTitle = `店貓日常 ‧ ${cleanName}`;
           deducedCategory = 'cat';
-          setTagInput('店貓日常, 阿池, 貓店長');
+          deducedTags = '店貓日常, 阿池, 貓店長';
         } else {
-          setTitle(`池記相片 ‧ ${cleanName}`);
-          setTagInput('池記桌遊, 場地相片');
+          deducedTitle = `池記相片 ‧ ${cleanName}`;
+          deducedTags = '池記桌遊, 場地相片';
         }
+        setTitle(deducedTitle);
+        setCategory(deducedCategory);
+        setTagInput(deducedTags);
       }
 
       // Try saving directly to public/uploads/
+      let finalUrl = base64;
       try {
         const uploadRes = await fetch('/api/upload-image', {
           method: 'POST',
@@ -184,18 +193,21 @@ export default function VenuePhotoStudio({
         });
         const uploadData = await uploadRes.json();
         if (uploadData.success && uploadData.url) {
-          setImageUrl(uploadData.url);
-          showToast('📸 照片已寫入專案目錄 /public/uploads/！點擊「發佈並寫入 src/data.ts」即可完成。');
-        } else {
-          setImageUrl(base64);
-          showToast('📸 照片已載入！點擊「發佈並寫入 src/data.ts」即可永久生效。');
+          finalUrl = uploadData.url;
         }
-      } catch {
-        setImageUrl(base64);
-        showToast('📸 照片已載入！點擊「發佈並寫入 src/data.ts」即可永久生效。');
+      } catch (err) {
+        console.warn('Fallback to base64 image representation', err);
       }
 
+      setImageUrl(finalUrl);
       setIsUploading(false);
+
+      if (autoPublishOnUpload) {
+        showToast('⚡ 自動發佈已啟用！正在寫入專案 src/data.ts 原始碼...');
+        await executePublish(finalUrl, deducedTitle, deducedCategory, deducedTags);
+      } else {
+        showToast('📸 照片已成功載入！請點擊【🚀 立即發佈相片】即可寫入原始碼並同步至前台！');
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -273,37 +285,46 @@ export default function VenuePhotoStudio({
     await persistToDataTs(merged);
   };
 
-  // Save or update single photo & write to src/data.ts
-  const handleSavePhoto = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!imageUrl.trim()) {
+  // Core publish execution function (can be called manually or automatically)
+  const executePublish = async (
+    overrideUrl?: string,
+    overrideTitle?: string,
+    overrideCategory?: VenuePhotoCategory,
+    overrideTags?: string
+  ) => {
+    const finalImg = overrideUrl || imageUrl.trim() || previewDataUrl.trim();
+    if (!finalImg) {
       showToast('⚠️ 請先上傳照片或輸入照片網址');
       return;
     }
 
-    const tagsArray = tagInput
+    const currentTitle = overrideTitle || title.trim() || '池記桌遊現場實拍';
+    const currentCategory = overrideCategory || category;
+    const currentTagsStr = overrideTags !== undefined ? overrideTags : tagInput;
+
+    const tagsArray = currentTagsStr
       .split(/[,，#]/)
       .map(t => t.trim())
       .filter(t => t.length > 0);
 
     const newPhoto: VenuePhoto = {
       id: editingPhotoId || `photo-${Date.now()}`,
-      title: title.trim() || '池記桌遊現場實拍',
-      category: category,
-      imageUrl: imageUrl.trim(),
+      title: currentTitle,
+      category: currentCategory,
+      imageUrl: finalImg,
       description: description.trim() || undefined,
       tags: tagsArray.length > 0 ? tagsArray : ['池記桌遊', '場地相片'],
       featured: isFeatured,
-      date: '2025-2026'
+      date: '2026'
     };
 
     let updatedList: VenuePhoto[];
     if (editingPhotoId) {
       updatedList = photos.map(p => p.id === editingPhotoId ? newPhoto : p);
-      showToast('🎉 相片已成功更新！正在寫入 src/data.ts...');
+      showToast('🎉 相片已成功更新！正在寫入 src/data.ts 原始碼...');
     } else {
       updatedList = [newPhoto, ...photos];
-      showToast('🎉 新相片已成功建立！正在寫入 src/data.ts...');
+      showToast('🎉 新相片已成功建立！正在寫入 src/data.ts 並更新前台...');
     }
 
     onUpdatePhotos(updatedList);
@@ -314,6 +335,12 @@ export default function VenuePhotoStudio({
     await persistToDataTs(updatedList);
   };
 
+  // Save or update single photo & write to src/data.ts
+  const handleSavePhoto = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    await executePublish();
+  };
+
   const resetForm = () => {
     setEditingPhotoId(null);
     setTitle('');
@@ -321,6 +348,7 @@ export default function VenuePhotoStudio({
     setDescription('');
     setTagInput('大場, 實木長桌, 500款桌遊');
     setImageUrl('');
+    setPreviewDataUrl('');
     setIsFeatured(false);
   };
 
@@ -331,6 +359,7 @@ export default function VenuePhotoStudio({
     setDescription(photo.description || '');
     setTagInput((photo.tags || []).join(', '));
     setImageUrl(photo.imageUrl);
+    setPreviewDataUrl(photo.imageUrl);
     setIsFeatured(!!photo.featured);
     setActiveTab('upload');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -514,15 +543,38 @@ export default function VenuePhotoStudio({
                 
                 {/* 1. Drag & Drop Upload Zone */}
                 <div className="bg-white p-4 sm:p-5 rounded-2xl border-[2.5px] border-slate-900 shadow-sm space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <label className="text-sm font-black text-slate-900 flex items-center gap-2">
                       <Upload className="w-4 h-4 text-amber-500" />
                       <span>第一步：選擇或拖曳相片（支援單張或多張批量上傳）</span>
                     </label>
-                    {isUploading && (
-                      <span className="text-xs font-bold text-amber-600 flex items-center gap-1 animate-pulse">
+                    {isUploading ? (
+                      <span className="text-xs font-bold text-amber-600 flex items-center gap-1 animate-pulse bg-amber-50 px-2 py-0.5 rounded-full border border-amber-300">
                         <Sparkles className="w-3.5 h-3.5" />
-                        處理中...
+                        📸 正在讀取並寫入相片...
+                      </span>
+                    ) : (previewDataUrl || imageUrl) ? (
+                      <span className="text-xs font-black text-emerald-700 flex items-center gap-1 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                        <Check className="w-3.5 h-3.5" />
+                        相片已就緒
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {/* Auto-publish toggle */}
+                  <div className="bg-[#faf5ea] p-2.5 rounded-xl border border-amber-300 flex items-center justify-between gap-3">
+                    <label className="inline-flex items-center gap-2 text-xs font-black text-slate-800 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={autoPublishOnUpload}
+                        onChange={(e) => setAutoPublishOnUpload(e.target.checked)}
+                        className="rounded text-amber-500 focus:ring-amber-400 w-4 h-4 cursor-pointer"
+                      />
+                      <span>⚡ 快速模式：選取相片後「自動一鍵發佈」至首頁（免手動點發佈）</span>
+                    </label>
+                    {autoPublishOnUpload && (
+                      <span className="text-[11px] font-black bg-amber-400 text-slate-950 px-2 py-0.5 rounded-md">
+                        已啟用
                       </span>
                     )}
                   </div>
@@ -531,7 +583,11 @@ export default function VenuePhotoStudio({
                     {/* Single Upload */}
                     <div 
                       onClick={() => singleFileInputRef.current?.click()}
-                      className="border-2 border-dashed border-amber-400 hover:border-amber-600 bg-amber-50/50 hover:bg-amber-100/50 p-4 rounded-xl text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1.5 group"
+                      className={`border-2 border-dashed ${
+                        (previewDataUrl || imageUrl) 
+                          ? 'border-emerald-500 bg-emerald-50/70' 
+                          : 'border-amber-400 hover:border-amber-600 bg-amber-50/50 hover:bg-amber-100/50'
+                      } p-4 rounded-xl text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1.5 group`}
                     >
                       <input 
                         type="file" 
@@ -540,14 +596,16 @@ export default function VenuePhotoStudio({
                         accept="image/*" 
                         className="hidden" 
                       />
-                      <div className="w-10 h-10 bg-amber-100 group-hover:bg-amber-200 rounded-full flex items-center justify-center text-amber-700 transition-transform group-hover:scale-110">
+                      <div className={`w-10 h-10 ${
+                        (previewDataUrl || imageUrl) ? 'bg-emerald-200 text-emerald-800' : 'bg-amber-100 group-hover:bg-amber-200 text-amber-700'
+                      } rounded-full flex items-center justify-center transition-transform group-hover:scale-110`}>
                         <ImageIcon className="w-5 h-5" />
                       </div>
                       <p className="text-xs font-black text-slate-900">
-                        上傳單張相片
+                        {(previewDataUrl || imageUrl) ? '🔄 點此更換其他相片' : '上傳單張相片'}
                       </p>
                       <p className="text-[11px] font-bold text-slate-500">
-                        自訂標題、分類與排版細節
+                        點擊選擇或直接拖曳圖片至此
                       </p>
                     </div>
 
@@ -571,10 +629,42 @@ export default function VenuePhotoStudio({
                         ⚡ 批量上傳多張相片
                       </p>
                       <p className="text-[11px] font-bold text-emerald-700">
-                        系統一鍵自動分類與排版！
+                        多張一鍵自動歸類並永久存檔！
                       </p>
                     </div>
                   </div>
+
+                  {/* Immediate Action Banner when single image is loaded */}
+                  {(previewDataUrl || imageUrl) && (
+                    <div className="bg-emerald-50 border-2 border-emerald-500 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-emerald-600 bg-slate-100 shrink-0">
+                          <img 
+                            src={previewDataUrl || imageUrl} 
+                            alt="Thumb" 
+                            className="w-full h-full object-cover" 
+                          />
+                        </div>
+                        <div>
+                          <p className="text-xs font-black text-emerald-950">
+                            相片已就緒：{title || '池記現場相片'}
+                          </p>
+                          <p className="text-[11px] font-bold text-emerald-700">
+                            排版已自動生成，點擊右方按鈕即可立即發佈！
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleSavePhoto()}
+                        disabled={isPersisting}
+                        className="w-full sm:w-auto px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-amber-300 rounded-lg font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition-transform hover:scale-105 cursor-pointer disabled:opacity-50"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                        <span>{isPersisting ? '寫入中...' : '🚀 立即發佈'}</span>
+                      </button>
+                    </div>
+                  )}
 
                   {/* Preset samples */}
                   <div className="pt-2">
@@ -737,11 +827,16 @@ export default function VenuePhotoStudio({
                   <div>
                     {/* Photo Container with Cat Badge */}
                     <div className="relative w-full bg-slate-100 min-h-[200px] flex items-center justify-center overflow-hidden">
-                      {imageUrl ? (
+                      {(previewDataUrl || imageUrl) ? (
                         <img 
-                          src={imageUrl} 
-                          alt="Preview" 
+                          src={previewDataUrl || imageUrl} 
+                          alt={title || "Preview"} 
                           className="w-full h-56 sm:h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            if (previewDataUrl && e.currentTarget.src !== previewDataUrl) {
+                              e.currentTarget.src = previewDataUrl;
+                            }
+                          }}
                         />
                       ) : (
                         <div className="p-8 text-center text-slate-400 font-bold text-xs flex flex-col items-center gap-2">
@@ -783,6 +878,48 @@ export default function VenuePhotoStudio({
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Immediate Action Card directly under Live Preview */}
+                <div className={`p-4 rounded-2xl border-2 transition-all ${
+                  (previewDataUrl || imageUrl) 
+                    ? 'bg-emerald-50 border-emerald-500 shadow-md ring-2 ring-emerald-400/30' 
+                    : 'bg-amber-50 border-amber-300'
+                }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    {(previewDataUrl || imageUrl) ? (
+                      <>
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 font-black shrink-0" />
+                        <span className="text-xs sm:text-sm font-black text-emerald-950">
+                          相片排版已就緒！點擊下方按鈕即可發佈：
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span className="text-xs font-bold text-amber-950">
+                          在左側上傳照片後，點擊下方即可一鍵發佈至前台
+                        </span>
+                      </>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSavePhoto()}
+                    disabled={isPersisting || (!imageUrl && !previewDataUrl)}
+                    className="w-full py-3.5 px-4 bg-slate-950 hover:bg-slate-800 text-amber-300 rounded-xl font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  >
+                    <Sparkles className="w-5 h-5 text-amber-400" />
+                    <span>
+                      {isPersisting 
+                        ? '正在永久寫入 src/data.ts 原始碼中...' 
+                        : (editingPhotoId ? '💾 立即儲存修改並寫入' : '🚀 立即發佈這張相片（寫入 src/data.ts）')}
+                    </span>
+                  </button>
+                  <p className="text-[11px] text-center font-bold text-slate-500 mt-2">
+                    點擊後將 100% 寫入專案 <code>src/data.ts</code> 並同步到首頁展示區！
+                  </p>
                 </div>
 
                 <div className="bg-amber-100/80 border border-amber-300 rounded-xl p-3 text-xs font-bold text-amber-950 flex items-start gap-2">
@@ -1106,17 +1243,30 @@ export default function VenuePhotoStudio({
         </div>
 
         {/* Footer info */}
-        <div className="bg-[#f4ebd9] border-t-[2px] border-slate-300 p-3 sm:p-4 px-6 flex flex-wrap items-center justify-between text-xs font-bold text-slate-600">
+        <div className="bg-[#f4ebd9] border-t-[2px] border-slate-300 p-3 sm:p-4 px-6 flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-slate-600">
           <div className="flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-amber-600" />
             <span>池記桌遊場相排版後台 ‧ 支援大場、細房、桌遊與店貓照片管理</span>
           </div>
-          <button
-            onClick={onClose}
-            className="px-4 py-1.5 bg-slate-900 text-white rounded-lg font-black hover:bg-slate-800 transition-colors"
-          >
-            完成並關閉
-          </button>
+          <div className="flex items-center gap-2">
+            {activeTab === 'upload' && (previewDataUrl || imageUrl) && (
+              <button
+                type="button"
+                onClick={() => handleSavePhoto()}
+                disabled={isPersisting}
+                className="px-4 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-amber-300 rounded-lg font-black flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>{isPersisting ? '寫入中...' : '🚀 立即發佈相片'}</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="px-4 py-1.5 bg-slate-900 text-white rounded-lg font-black hover:bg-slate-800 transition-colors"
+            >
+              完成並關閉
+            </button>
+          </div>
         </div>
 
       </div>

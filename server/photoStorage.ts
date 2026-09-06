@@ -35,6 +35,18 @@ export function saveBase64Image(dataUrl: string, prefix = 'photo'): string {
   const filePath = path.join(UPLOADS_DIR, fileName);
 
   fs.writeFileSync(filePath, buffer);
+
+  // Also sync to dist/uploads if dist exists for static production
+  const distUploadsDir = path.join(ROOT_DIR, 'dist', 'uploads');
+  try {
+    if (!fs.existsSync(distUploadsDir)) {
+      fs.mkdirSync(distUploadsDir, { recursive: true });
+    }
+    fs.writeFileSync(path.join(distUploadsDir, fileName), buffer);
+  } catch (e) {
+    // ignore if dist not built yet
+  }
+
   return `/uploads/${fileName}`;
 }
 

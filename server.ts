@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { 
   writeVenuePhotosToDataTs, 
@@ -70,6 +71,15 @@ async function startServer() {
       res.status(500).send("無法讀取 src/data.ts");
     }
   });
+
+  // Static serving for user uploaded images and public assets
+  const uploadsDir = path.join(process.cwd(), "public", "uploads");
+  const publicDir = path.join(process.cwd(), "public");
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  app.use("/uploads", express.static(uploadsDir));
+  app.use(express.static(publicDir));
 
   // Vite middleware for development vs static serve for production
   if (process.env.NODE_ENV !== "production") {
