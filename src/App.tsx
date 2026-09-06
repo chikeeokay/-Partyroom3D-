@@ -26,6 +26,7 @@ import PrintingSection from './components/PrintingSection';
 import PosterUploaderStudio from './components/PosterUploaderStudio';
 import VenuePhotoStudio from './components/VenuePhotoStudio';
 import AdminLoginModal from './components/AdminLoginModal';
+import PricingInfoBoard from './components/PricingInfoBoard';
 import { BoardGameEvent, VenuePhoto } from './types';
 import { BOARD_GAME_EVENTS as DEFAULT_EVENTS, VENUE_PHOTOS as DEFAULT_VENUE_PHOTOS } from './data';
 import { Lock, LogOut, ShieldCheck } from 'lucide-react';
@@ -428,32 +429,13 @@ export default function App() {
         </AnimatePresence>
       </header>
 
-      {/* HERO SECTION - Styled with warm orange and botanical accents matching the Canva look */}
+      {/* HERO SECTION - SEO-friendly Pricing & Venue Facility Board (Converted from Image to HTML/CSS with exact yellow & brown frame design) */}
       <section id="hero" className="relative pt-0 pb-0 overflow-hidden bg-[#ffa01b]">
         {/* Playful background graphics */}
         <div className="absolute top-1/4 right-0 w-80 h-80 bg-orange-400/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-5 left-5 w-60 h-60 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
         
-        <div className="w-full relative">
-          <div className="flex justify-center items-center w-full">
-            {/* NOTE: Upload the yellow pricing/info board image to the /public folder as "info-board.png" */}
-            <a 
-              href="https://wa.me/85293737819?text=您好！我想向池記桌遊查詢場地、台牌教學及3D打印，謝謝！" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="relative w-full block cursor-pointer group"
-              title="點擊即時聯絡 WhatsApp: 93737819"
-            >
-              <img 
-                src="/info-board.png" 
-                alt="池記桌遊 價格與設施資訊" 
-                className="w-full h-auto object-contain drop-shadow-xl transition-transform duration-300 group-hover:scale-[1.01]"
-              />
-              {/* Invisible overlay hint for the top right whatsapp section painted on the image */}
-              <div className="absolute top-2 right-2 sm:top-6 sm:right-6 w-16 h-16 sm:w-24 sm:h-24 bg-white/0 group-hover:bg-white/10 rounded-xl transition-colors duration-300" />
-            </a>
-          </div>
-        </div>
+        <PricingInfoBoard onOpenWhatsApp={handleGeneralWhatsApp} />
       </section>
 
       {/* SECTION 1: VENUE & BOARD GAME PHOTOS (Upload studio only available for logged-in Admin) */}
