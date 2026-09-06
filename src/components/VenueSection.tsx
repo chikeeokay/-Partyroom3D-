@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { VenuePhoto, VenuePhotoCategory } from '../types';
 import { VENUE_PHOTOS as DEFAULT_VENUE_PHOTOS } from '../data';
+import VenueShowcaseBoard from './VenueShowcaseBoard';
 
 interface VenueSectionProps {
   photos?: VenuePhoto[];
@@ -68,29 +69,21 @@ export default function VenueSection({
     }
   };
 
-  const currentLightboxPhoto = activeLightboxIndex !== null ? filteredPhotos[activeLightboxIndex] : null;
+  const currentLightboxPhoto: VenuePhoto | null = activeLightboxIndex !== null ? filteredPhotos[activeLightboxIndex] : null;
 
   return (
     <section id="venue" className="pt-0 pb-12 bg-[#ffa01b] text-slate-800 relative">
       
-      {/* 1. TOP VENUE BANNER (大場 & 細房 主圖) */}
-      <div className="w-full">
-        <div className="flex justify-center items-center w-full">
-          <a 
-            href="https://wa.me/85293737819?text=您好！我想向池記桌遊查詢場地（大場/細房包場）、台牌教學及3D打印，謝謝！" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="relative w-full block cursor-pointer group"
-            title="點擊即時聯絡 WhatsApp: 93737819"
-          >
-            <img 
-              src="/venue-photo.jpg" 
-              alt="池記桌遊 場相及桌遊空間 (大場 & 細房)" 
-              className="w-full h-auto object-contain drop-shadow-xl transition-transform duration-300 group-hover:scale-[1.005]"
-            />
-          </a>
-        </div>
-      </div>
+      {/* 1. TOP VENUE SHOWCASE BOARD (SEO-friendly text header + Clean venue photo collage, without extra frame or duplicate buttons) */}
+      <VenueShowcaseBoard 
+        onOpenWhatsApp={() => {
+          window.open(
+            'https://wa.me/85293737819?text=您好！我想向池記桌遊查詢場地（大場/細房包場）、預約睇場，謝謝！',
+            '_blank',
+            'noopener,noreferrer'
+          );
+        }}
+      />
 
       {/* 2. DEDICATED SECTION: 「場相及桌遊相片」 (MATCHING PHOTO 2 TITLE EXACTLY) */}
       <div className="max-w-6xl mx-auto px-3 sm:px-6 pt-6 pb-2">
