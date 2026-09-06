@@ -122,8 +122,27 @@ export default function App() {
   };
 
   // Dynamic Venue Photos State with LocalStorage Persistence
-  // Venue Photos State (Initializes directly from src/data.ts DEFAULT_VENUE_PHOTOS)
-  const [venuePhotos, setVenuePhotos] = useState<VenuePhoto[]>(DEFAULT_VENUE_PHOTOS);
+  // Venue Photos State (Initializes directly from src/data.ts DEFAULT_VENUE_PHOTOS, with cache sanitization)
+  const [venuePhotos, setVenuePhotos] = useState<VenuePhoto[]>(() => {
+    try {
+      const cached = localStorage.getItem('chikee_venue_photos');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Fix any stale/broken /uploads/ URLs pointing to missing files from local storage
+          return parsed.map((p: VenuePhoto) => {
+            if (p.imageUrl && (p.imageUrl.startsWith('/uploads/venue-main_hall') || p.imageUrl === '/uploads/')) {
+              return { ...p, imageUrl: DEFAULT_VENUE_PHOTOS[0]?.imageUrl || '/venue-user-1.jpg' };
+            }
+            return p;
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Could not read cached photos', e);
+    }
+    return DEFAULT_VENUE_PHOTOS;
+  });
 
   // Sync photos from API if running with server
   useEffect(() => {
@@ -135,10 +154,13 @@ export default function App() {
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
           setVenuePhotos(data);
+          try {
+            localStorage.setItem('chikee_venue_photos', JSON.stringify(data));
+          } catch {}
         }
       })
       .catch(() => {
-        // In static production, DEFAULT_VENUE_PHOTOS from src/data.ts is already loaded
+        // In static production (Netlify), DEFAULT_VENUE_PHOTOS from src/data.ts is already loaded
       });
   }, []);
 

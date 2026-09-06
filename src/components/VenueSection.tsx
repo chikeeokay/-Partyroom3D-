@@ -214,6 +214,12 @@ export default function VenueSection({
                       <img 
                         src={photo.imageUrl} 
                         alt={photo.title}
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (target.src !== window.location.origin + '/venue-user-1.jpg') {
+                            target.src = '/venue-user-1.jpg';
+                          }
+                        }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
 
@@ -318,6 +324,12 @@ export default function VenueSection({
               <img 
                 src={currentLightboxPhoto.imageUrl} 
                 alt={currentLightboxPhoto.title}
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (target.src !== window.location.origin + '/venue-user-1.jpg') {
+                    target.src = '/venue-user-1.jpg';
+                  }
+                }}
                 className="max-h-[60vh] max-w-full object-contain"
               />
 
