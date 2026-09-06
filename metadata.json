@@ -1,6 +1,6 @@
 {
   "name": "Chikeechi Board Games",
-  "description": "池記桌遊（荔枝角場）- 700實呎暢玩不計時任飲、包場不限人數、500+桌遊任玩、電動台麻/跑馬仔/日麻、狼人殺及Switch Partyroom，收費及場地設施詳情。",
+  "description": "池記桌遊 桌上遊戲 3D打印維修工作室（荔枝角場）- 700實呎暢玩不計時任飲、包場不限人數、500+桌遊任玩、3D打印配件及模型維修、電動台麻/跑馬仔/日麻、狼人殺及Switch Partyroom，收費及場地設施詳情。",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -5,6 +5,8 @@ interface PricingInfoBoardProps {
   onOpenWhatsApp?: () => void;
 }
 
+export const CHI_KEE_GOOGLE_MAPS_URL = 'https://www.google.com/maps/place/%E6%B1%A0%E8%A8%98%E6%A1%8C%E9%81%8A+%E6%A1%8C%E4%B8%8A%E9%81%8A%E6%88%B2/@22.338715,114.1459905,18z/data=!4m6!3m5!1s0x340407edfd967069:0x4e6b8780e3314f22!8m2!3d22.3387136!4d114.146694!16s%2Fg%2F11wj601lpl?entry=ttu&g_ep=EgoyMDI2MDkwMi4wIKXMDSoASAFQAw%3D%3D';
+
 export default function PricingInfoBoard({ onOpenWhatsApp }: PricingInfoBoardProps) {
   const handleWhatsApp = () => {
     if (onOpenWhatsApp) {
@@ -15,7 +17,7 @@ export default function PricingInfoBoard({ onOpenWhatsApp }: PricingInfoBoardPro
   };
 
   const handleOpenGoogleMaps = () => {
-    window.open('https://www.google.com/maps/search/?api=1&query=九龍荔枝角永康街29-33號兆威工業大廈', '_blank');
+    window.open(CHI_KEE_GOOGLE_MAPS_URL, '_blank');
   };
 
   return (
@@ -335,25 +337,40 @@ export default function PricingInfoBoard({ onOpenWhatsApp }: PricingInfoBoardPro
                     title="點擊放大或開啟 Google 地圖導航"
                   />
                   
-                  {/* Subtle hover overlay hint */}
+                  {/* Map Navigation Pill Button - Exactly matches Image 2 */}
                   <button
                     type="button"
                     onClick={handleOpenGoogleMaps}
-                    className="absolute bottom-2 right-2 px-2.5 py-1 bg-slate-950/85 hover:bg-slate-950 text-white text-[11px] font-bold rounded-lg border border-slate-700 flex items-center gap-1 shadow-md transition-colors cursor-pointer"
+                    className="absolute bottom-2.5 right-2.5 px-3.5 py-1.5 bg-[#0f172a] hover:bg-black text-white text-xs sm:text-[13px] font-black rounded-full border border-slate-700/80 flex items-center gap-1.5 sm:gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 cursor-pointer z-10"
+                    title="開啟 Google 地圖導航至「池記桌遊 桌上遊戲」"
                   >
-                    <Navigation className="w-3 h-3 text-amber-400" />
-                    <span>開啟地圖導航</span>
-                    <ExternalLink className="w-2.5 h-2.5 opacity-80" />
+                    <Navigation className="w-3.5 h-3.5 text-[#ffc107] fill-[#ffc107]/20" />
+                    <span className="tracking-wide">開啟地圖導航</span>
+                    <ExternalLink className="w-3 h-3 text-slate-300" />
                   </button>
                 </div>
               </div>
 
-              {/* SEARCHABLE SEO TEXT INFORMATION (Google 爬蟲可完整索引的地址與路線) - 減少地圖與地址 spacing，放大地址，縮小行距 */}
+              {/* SEARCHABLE SEO TEXT INFORMATION (Google 爬蟲可完整索引的地址與路線) */}
               <div className="space-y-1.5 text-left mt-1.5 sm:mt-2">
-                <div className="space-y-0.5 leading-snug">
-                  <div className="flex items-center gap-1.5 text-sm sm:text-base font-bold text-slate-950">
-                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
-                    <span>地址：香港九龍荔枝角永康街 29-33 號兆威工業大廈</span>
+                <div className="space-y-1 leading-snug">
+                  <div className="flex items-start sm:items-center gap-1.5 text-sm sm:text-base font-black text-slate-950">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0 mt-1 sm:mt-0" />
+                    <span>
+                      地點：<a 
+                        href={CHI_KEE_GOOGLE_MAPS_URL} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-slate-950 hover:text-amber-800 hover:underline inline-flex items-center gap-1 font-black"
+                        title="在 Google 地圖開啟池記桌遊 桌上遊戲"
+                      >
+                        池記桌遊 桌上遊戲
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-600 inline" />
+                      </a>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-800 pl-4">
+                    <span>📍 地址：香港九龍荔枝角永康街 29-33 號兆威工業大廈</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-800 pl-4">
                     <span>🚇 港鐵荔枝角站 C 出口（兩個街口，步行約 3 分鐘即達）</span>
@@ -374,14 +391,17 @@ export default function PricingInfoBoard({ onOpenWhatsApp }: PricingInfoBoardPro
                     <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
                     <span>WhatsApp 93737819 預約</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={handleOpenGoogleMaps}
-                    className="px-3 py-1.5 bg-[#ffd000] hover:bg-[#ffdc26] text-slate-950 font-bold text-xs rounded-xl border border-slate-900 shadow-xs flex items-center justify-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
+                  <a
+                    href={CHI_KEE_GOOGLE_MAPS_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-1.5 bg-[#ffd000] hover:bg-[#ffdc26] text-slate-950 font-black text-xs rounded-xl border border-slate-900 shadow-xs flex items-center justify-center gap-1.5 transition-transform active:scale-95 cursor-pointer text-decoration-none"
+                    title="開啟 Google 地圖導航至池記桌遊 桌上遊戲"
                   >
-                    <Navigation className="w-3.5 h-3.5 text-slate-950" />
+                    <Navigation className="w-3.5 h-3.5 text-slate-950 fill-slate-950/20" />
                     <span>Google 導航</span>
-                  </button>
+                    <ExternalLink className="w-3 h-3 text-slate-800" />
+                  </a>
                 </div>
               </div>
 

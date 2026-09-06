@@ -26,7 +26,8 @@ import PrintingSection from './components/PrintingSection';
 import PosterUploaderStudio from './components/PosterUploaderStudio';
 import VenuePhotoStudio from './components/VenuePhotoStudio';
 import AdminLoginModal from './components/AdminLoginModal';
-import PricingInfoBoard from './components/PricingInfoBoard';
+import PricingInfoBoard, { CHI_KEE_GOOGLE_MAPS_URL } from './components/PricingInfoBoard';
+import CatMilkCard from './components/CatMilkCard';
 import { BoardGameEvent, VenuePhoto } from './types';
 import { BOARD_GAME_EVENTS as DEFAULT_EVENTS, VENUE_PHOTOS as DEFAULT_VENUE_PHOTOS } from './data';
 import { Lock, LogOut, ShieldCheck } from 'lucide-react';
@@ -121,20 +122,25 @@ export default function App() {
   };
 
   // Dynamic Venue Photos State with LocalStorage Persistence
-  const [venuePhotos, setVenuePhotos] = useState<VenuePhoto[]>(() => {
-    try {
-      const saved = localStorage.getItem('chikee_venue_photos');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+  // Venue Photos State (Initializes directly from src/data.ts DEFAULT_VENUE_PHOTOS)
+  const [venuePhotos, setVenuePhotos] = useState<VenuePhoto[]>(DEFAULT_VENUE_PHOTOS);
+
+  // Sync photos from API if running with server
+  useEffect(() => {
+    fetch('/api/photos')
+      .then(res => {
+        if (!res.ok) throw new Error('API not available');
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setVenuePhotos(data);
         }
-      }
-    } catch (e) {
-      console.warn('Failed to load venue photos from storage', e);
-    }
-    return DEFAULT_VENUE_PHOTOS;
-  });
+      })
+      .catch(() => {
+        // In static production, DEFAULT_VENUE_PHOTOS from src/data.ts is already loaded
+      });
+  }, []);
 
   const handleUpdateVenuePhotos = (newPhotos: VenuePhoto[]) => {
     setVenuePhotos(newPhotos);
@@ -239,20 +245,36 @@ export default function App() {
         }`}
       >
         <div className="w-full mx-auto px-2 lg:px-4 flex justify-center relative">
-          <div className="flex flex-row flex-wrap xl:flex-nowrap items-center justify-center gap-4 lg:gap-8 xl:gap-10 py-1 max-w-fit">
-            {/* Logo Section - Prepared for Image 2 (Banner) */}
-            <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="flex items-center group shrink-0">
-              {/* NOTE: Upload your cropped banner image to the /public folder as "banner.jpg" */}
-              <img 
-                src="/banner.jpg" 
-                alt="池記桌遊 3D打印維修工作室" 
-                className="h-16 sm:h-20 lg:h-24 xl:h-28 object-contain drop-shadow-md"
+          <div className="flex flex-row flex-wrap xl:flex-nowrap items-center justify-center gap-3 lg:gap-6 xl:gap-8 py-1 max-w-fit">
+            {/* Logo Section - Card 1 (Cat Milk Mascot) on left of Card 2 (池記桌遊 3D打印維修工作室) */}
+            <div className="flex items-center gap-2 sm:gap-3 xl:gap-3.5 shrink-0">
+              {/* Card 1: Cat Milk Mascot Card */}
+              <CatMilkCard 
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="shrink-0"
               />
-            </a>
 
-            {/* Desktop Nav - Layout adjusted (排版) to match Image 3 with Leaf styles */}
-            <div className="hidden lg:flex flex-row flex-wrap xl:flex-nowrap items-center justify-center gap-4 xl:gap-8">
-              <nav className="flex flex-row flex-wrap justify-center gap-2 xl:gap-3 shrink-0">
+              {/* Card 2: Pure HTML Semantic Text for Optimal SEO (池記桌遊 3D打印維修工作室) */}
+              <a 
+                href="#" 
+                onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
+                className="flex items-center group shrink-0 text-decoration-none"
+                title="池記桌遊 桌上遊戲 3D打印維修工作室 - 回到頂部"
+              >
+                <div className="bg-[#fff7eb] hover:bg-[#fffcf3] px-3 sm:px-4 xl:px-5 py-1.5 sm:py-2 rounded-2xl sm:rounded-3xl border-[2.5px] sm:border-[3px] border-[#0f172a] shadow-[3px_3px_0px_#0f172a] sm:shadow-[4px_4px_0px_#0f172a] transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-[5px_5px_0px_#0f172a] flex flex-col items-center justify-center select-none cursor-pointer">
+                  <h1 className="text-[18px] sm:text-[24px] lg:text-[28px] xl:text-[32px] font-black text-[#0f172a] tracking-tight leading-none text-center">
+                    池記桌遊
+                  </h1>
+                  <p className="text-[9.5px] sm:text-[11.5px] lg:text-[12.5px] xl:text-[14px] font-black text-[#0f172a] tracking-wider leading-tight text-center mt-0.5 sm:mt-1">
+                    3D打印維修工作室
+                  </p>
+                </div>
+              </a>
+            </div>
+
+            {/* Desktop Nav - Divided into two rows (分為兩列) with enlarged text close to dashed border matching Image 3 & 4 */}
+            <div className="hidden lg:flex flex-row flex-wrap xl:flex-nowrap items-center justify-center gap-3 xl:gap-6">
+              <nav className="grid grid-cols-2 gap-x-2.5 xl:gap-x-3.5 gap-y-1.5 xl:gap-y-2 shrink-0">
                 {[
                   { id: 'venue', label: '場相及桌遊相片' },
                   { id: 'events', label: '活動資訊' },
@@ -264,37 +286,44 @@ export default function App() {
                     <button
                       key={tab.id}
                       onClick={() => scrollToSection(tab.id)}
-                      className={`relative px-3 py-1.5 xl:px-5 xl:py-2 rounded-xl text-[13px] xl:text-[15px] font-black transition-all cursor-pointer border-[2.5px] shadow-sm ${
+                      className={`relative px-3 py-1 sm:px-3.5 sm:py-1.5 xl:px-4 xl:py-1.5 rounded-2xl text-[14.5px] sm:text-[15.5px] xl:text-[17px] font-black transition-all cursor-pointer border-[2.5px] shadow-sm flex items-center justify-center ${
                         isActive 
-                          ? 'bg-[#f4f8d3] border-[#1e293b] text-[#1e293b] -translate-y-0.5' 
-                          : 'bg-[#fcfee9] border-[#1e293b] text-[#1e293b] hover:bg-[#f4f8d3]'
+                          ? 'bg-[#f2f8dc] border-[#0f172a] text-[#0f172a] -translate-y-0.5 shadow-md' 
+                          : 'bg-[#fcfee9] border-[#0f172a] text-[#0f172a] hover:bg-[#f2f8dc]'
                       }`}
                       style={{ borderStyle: 'dashed' }}
                     >
-                      {/* Leaf SVG Decoration */}
-                      <svg className="absolute -left-3.5 -top-3 w-8 h-8 xl:w-9 xl:h-9 drop-shadow-sm pointer-events-none" viewBox="0 0 100 100" fill="none">
-                        <path d="M55 75 Q65 50 85 45 Q90 60 70 70 Q60 80 55 75 Z" fill="#8bc34a" stroke="#fff" strokeWidth="4" strokeLinejoin="round"/>
-                        <path d="M55 75 Q45 50 25 45 Q20 60 40 70 Q50 80 55 75 Z" fill="#8bc34a" stroke="#fff" strokeWidth="4" strokeLinejoin="round"/>
-                        <path d="M55 75 Q55 85 50 95" stroke="#8d6e63" strokeWidth="4" strokeLinecap="round"/>
+                      {/* Leaf SVG Decoration - Exactly matching Image 3 & 4 */}
+                      <svg 
+                        className="absolute -left-3 -top-2.5 w-7 h-7 sm:w-8 sm:h-8 drop-shadow-sm pointer-events-none" 
+                        viewBox="0 0 100 100" 
+                        fill="none"
+                      >
+                        <path d="M55 75 Q68 48 88 42 Q92 58 72 68 Q62 78 55 75 Z" fill="#8bc34a" stroke="#fff" strokeWidth="4" strokeLinejoin="round"/>
+                        <path d="M55 75 Q42 48 22 42 Q18 58 38 68 Q48 78 55 75 Z" fill="#8bc34a" stroke="#fff" strokeWidth="4" strokeLinejoin="round"/>
+                        <path d="M55 75 Q55 86 50 96" stroke="#8d6e63" strokeWidth="5" strokeLinecap="round"/>
                       </svg>
-                      <span className="relative z-10 tracking-wide block text-center whitespace-nowrap">{tab.label}</span>
+                      {/* Enlarged Text closer to dashed border */}
+                      <span className="relative z-10 tracking-tight block text-center whitespace-nowrap leading-tight">
+                        {tab.label}
+                      </span>
                     </button>
                   );
                 })}
               </nav>
 
-              {/* Social Connect CTA Buttons - Stacked Vertically */}
-              <div className="flex flex-col items-stretch justify-center gap-2 shrink-0">
+              {/* Social Connect CTA Buttons - Stacked Vertically to match 2-row nav height */}
+              <div className="flex flex-col items-stretch justify-center gap-1.5 shrink-0">
                 <button
                   onClick={handleGeneralWhatsApp}
                   className="flex flex-row items-center justify-center bg-[#eaf4ca] hover:bg-[#ddebaf] rounded-full overflow-hidden shadow-sm transition-transform hover:-translate-y-0.5 cursor-pointer border-[3px] border-[#0f172a]"
                 >
-                  <div className="bg-[#4cda64] px-3 xl:px-4 py-2 xl:py-2.5 flex items-center justify-center h-full">
-                    <svg viewBox="0 0 24 24" className="w-5 h-5 xl:w-7 xl:h-7 fill-white" xmlns="http://www.w3.org/2000/svg">
+                  <div className="bg-[#4cda64] px-2.5 xl:px-3.5 py-1.5 xl:py-2 flex items-center justify-center h-full">
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 xl:w-5 xl:h-5 fill-white" xmlns="http://www.w3.org/2000/svg">
                       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.888-.788-1.487-1.761-1.66-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
                     </svg>
                   </div>
-                  <span className="px-4 xl:px-5 py-2 text-[20px] xl:text-[26px] font-black text-[#0f172a] tracking-widest leading-none pb-2.5 pt-2.5 xl:pb-3 xl:pt-3">9373 7819</span>
+                  <span className="px-3 xl:px-4 py-1.5 text-[17px] xl:text-[21px] font-black text-[#0f172a] tracking-widest leading-none">9373 7819</span>
                 </button>
                 
                 <a
@@ -303,10 +332,10 @@ export default function App() {
                   rel="noopener noreferrer"
                   className="flex flex-row items-center justify-center bg-[#fef5e7] hover:bg-[#fdeed2] rounded-full overflow-hidden shadow-sm transition-transform hover:-translate-y-0.5 cursor-pointer border-[3px] border-[#0f172a]"
                 >
-                  <div className="bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] px-3 xl:px-4 py-2 xl:py-2.5 flex items-center justify-center h-full">
-                    <Instagram className="w-5 h-5 xl:w-7 xl:h-7 text-white" strokeWidth={2} />
+                  <div className="bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] px-2.5 xl:px-3.5 py-1.5 xl:py-2 flex items-center justify-center h-full">
+                    <Instagram className="w-4 h-4 xl:w-5 xl:h-5 text-white" strokeWidth={2} />
                   </div>
-                  <span className="px-4 xl:px-5 py-2 text-[18px] xl:text-[22px] font-black text-[#0f172a] tracking-widest leading-none pb-2.5 pt-2.5 xl:pb-3 xl:pt-3">@boardgameschi</span>
+                  <span className="px-3 xl:px-4 py-1.5 text-[15px] xl:text-[18px] font-black text-[#0f172a] tracking-widest leading-none">@boardgameschi</span>
                 </a>
               </div>
             </div>
@@ -328,9 +357,26 @@ export default function App() {
           <div className="w-full px-2 md:px-4 flex flex-wrap justify-center items-center gap-y-2 gap-x-6 md:gap-x-12 text-center text-[12px] sm:text-[14px] md:text-[16px] lg:text-[18px] font-black tracking-wider text-amber-400">
             <span className="flex items-center gap-1.5 md:gap-2">⏰ 營業時間：12:00 PM - 12:00 AM</span>
             <span className="hidden md:inline text-slate-500">|</span>
-            <span className="flex items-center gap-1.5 md:gap-2">📍 地址：荔枝角永康街29-33號兆威工業大廈</span>
+            <a 
+              href={CHI_KEE_GOOGLE_MAPS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 md:gap-2 hover:text-amber-300 hover:underline transition-colors cursor-pointer text-decoration-none"
+              title="點擊開啟 Google 地圖導航至池記桌遊 桌上遊戲"
+            >
+              📍 地址：荔枝角永康街29-33號兆威工業大廈
+              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+            </a>
             <span className="hidden md:inline text-slate-500">|</span>
-            <span className="flex items-center gap-1.5 md:gap-2">🚇 港鐵：荔枝角站 C 出口步行 3 分鐘即達</span>
+            <a 
+              href={CHI_KEE_GOOGLE_MAPS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 md:gap-2 hover:text-amber-300 hover:underline transition-colors cursor-pointer text-decoration-none"
+              title="點擊開啟 Google 地圖導航至池記桌遊 桌上遊戲"
+            >
+              🚇 港鐵：荔枝角站 C 出口步行 3 分鐘即達
+            </a>
           </div>
         </div>
 
@@ -490,9 +536,15 @@ export default function App() {
                 <span className="text-2xl sm:text-3xl">🦊</span>
                 <span className="text-[clamp(1rem,3vw,1.875rem)] font-black text-white tracking-tight">池記桌遊 ‧ 3D 打印維修工作室</span>
               </div>
-              <p className="text-[clamp(0.75rem,2vw,1.125rem)] text-slate-400 font-bold">
-                香港荔枝角永康街 29-33 號兆威工業大廈
-              </p>
+              <a 
+                href={CHI_KEE_GOOGLE_MAPS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[clamp(0.75rem,2vw,1.125rem)] text-slate-400 hover:text-amber-300 font-bold block transition-colors cursor-pointer text-decoration-none"
+                title="點擊開啟 Google 地圖導航至池記桌遊 桌上遊戲"
+              >
+                香港荔枝角永康街 29-33 號兆威工業大廈 (開啟 Google 地圖導航 ↗)
+              </a>
             </div>
 
             {/* Middle Nav Links */}

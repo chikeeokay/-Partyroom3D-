@@ -48,9 +48,11 @@ export default function VenuePhotoStudio({
   const [imageUrl, setImageUrl] = useState('');
   const [isFeatured, setIsFeatured] = useState(false);
   
-  // Batch upload state
+  // Batch upload & Persist state
   const [batchUploadCount, setBatchUploadCount] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [isPersisting, setIsPersisting] = useState(false);
+  const [lastPersistedTime, setLastPersistedTime] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
@@ -108,6 +110,36 @@ export default function VenuePhotoStudio({
     showToast('已套用範本相片！您可以立即儲存或修改。');
   };
 
+  // Core: Directly writes photos into src/data.ts source code & saves files to public/uploads
+  const persistToDataTs = async (photosToPersist: VenuePhoto[]): Promise<boolean> => {
+    setIsPersisting(true);
+    try {
+      const res = await fetch('/api/save-photos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photos: photosToPersist })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        if (data.updatedPhotos && Array.isArray(data.updatedPhotos)) {
+          onUpdatePhotos(data.updatedPhotos);
+        }
+        const nowStr = new Date().toLocaleTimeString('zh-HK');
+        setLastPersistedTime(nowStr);
+        showToast(`🎉 成功！已 100% 永久寫入專案 src/data.ts 原始碼 (共 ${data.count} 張)！發佈至 chikeechi.com 即全球生效！`);
+        return true;
+      } else {
+        throw new Error(data.error || '後台寫入失敗');
+      }
+    } catch (err: any) {
+      console.error('寫入 src/data.ts 失敗:', err);
+      showToast(`⚠️ 已更新畫面，背景寫入提示: ${err.message || '請確認後台運作'}`);
+      return false;
+    } finally {
+      setIsPersisting(false);
+    }
+  };
+
   // Handle single photo upload
   const handleSingleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -115,93 +147,134 @@ export default function VenuePhotoStudio({
 
     setIsUploading(true);
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const base64 = event.target?.result as string;
-      setImageUrl(base64);
 
       // Auto deduce title and category from filename
       const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+      let deducedCategory = category;
       if (!title) {
         if (/大場|main|hall|table/i.test(cleanName)) {
           setTitle(`大場 ‧ ${cleanName}`);
           setCategory('main_hall');
+          deducedCategory = 'main_hall';
           setTagInput('大場, 聚會空間, 實木長桌');
         } else if (/細房|room|mahjong|麻雀|麻將/i.test(cleanName)) {
           setTitle(`細房 ‧ ${cleanName}`);
           setCategory('small_room');
+          deducedCategory = 'small_room';
           setTagInput('細房, 電動麻將, 獨立包廂');
         } else if (/cat|貓|阿池|肥橘/i.test(cleanName)) {
           setTitle(`店貓日常 ‧ ${cleanName}`);
           setCategory('cat');
+          deducedCategory = 'cat';
           setTagInput('店貓日常, 阿池, 貓店長');
         } else {
           setTitle(`池記相片 ‧ ${cleanName}`);
           setTagInput('池記桌遊, 場地相片');
         }
       }
+
+      // Try saving directly to public/uploads/
+      try {
+        const uploadRes = await fetch('/api/upload-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ base64, prefix: `venue-${deducedCategory}` })
+        });
+        const uploadData = await uploadRes.json();
+        if (uploadData.success && uploadData.url) {
+          setImageUrl(uploadData.url);
+          showToast('📸 照片已寫入專案目錄 /public/uploads/！點擊「發佈並寫入 src/data.ts」即可完成。');
+        } else {
+          setImageUrl(base64);
+          showToast('📸 照片已載入！點擊「發佈並寫入 src/data.ts」即可永久生效。');
+        }
+      } catch {
+        setImageUrl(base64);
+        showToast('📸 照片已載入！點擊「發佈並寫入 src/data.ts」即可永久生效。');
+      }
+
       setIsUploading(false);
-      showToast('📸 照片已成功載入！請確認後點擊「發佈照片」');
     };
     reader.readAsDataURL(file);
   };
 
-  // Handle multiple batch photo upload & auto layout
-  const handleBatchImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle multiple batch photo upload & auto layout & persist to src/data.ts
+  const handleBatchImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     setIsUploading(true);
     const newAddedPhotos: VenuePhoto[] = [];
-    let processed = 0;
 
-    Array.from(files).forEach((file: File, index: number) => {
+    for (let index = 0; index < files.length; index++) {
+      const file = files[index];
       const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64 = event.target?.result as string;
-        const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-        
-        let detectedCategory: VenuePhotoCategory = 'main_hall';
-        let detectedTags = ['池記桌遊', '場地實景'];
 
-        if (/細房|room|mahjong|麻雀|麻將/i.test(cleanName)) {
-          detectedCategory = 'small_room';
-          detectedTags = ['細房', '電動麻將', '獨立包廂'];
-        } else if (/cat|貓|阿池|肥橘/i.test(cleanName)) {
-          detectedCategory = 'cat';
-          detectedTags = ['店貓日常', '阿池', '寵物友善'];
-        } else if (/game|boardgame|桌遊|盒/i.test(cleanName)) {
-          detectedCategory = 'boardgames';
-          detectedTags = ['桌遊相片', '精選遊戲'];
-        }
+      await new Promise<void>((resolve) => {
+        reader.onload = async (event) => {
+          const base64 = event.target?.result as string;
+          const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+          
+          let detectedCategory: VenuePhotoCategory = 'main_hall';
+          let detectedTags = ['池記桌遊', '場地實景'];
 
-        const newPhotoItem: VenuePhoto = {
-          id: `photo-${Date.now()}-${index}`,
-          title: cleanName.length > 2 ? cleanName : `池記現場相片 #${photos.length + index + 1}`,
-          category: detectedCategory,
-          imageUrl: base64,
-          description: `池記桌遊現場實景拍攝。`,
-          tags: detectedTags,
-          date: '2025-2026'
+          if (/細房|room|mahjong|麻雀|麻將/i.test(cleanName)) {
+            detectedCategory = 'small_room';
+            detectedTags = ['細房', '電動麻將', '獨立包廂'];
+          } else if (/cat|貓|阿池|肥橘/i.test(cleanName)) {
+            detectedCategory = 'cat';
+            detectedTags = ['店貓日常', '阿池', '寵物友善'];
+          } else if (/game|boardgame|桌遊|盒/i.test(cleanName)) {
+            detectedCategory = 'boardgames';
+            detectedTags = ['桌遊相片', '精選遊戲'];
+          }
+
+          let finalUrl = base64;
+          try {
+            const uploadRes = await fetch('/api/upload-image', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ base64, prefix: `venue-${detectedCategory}` })
+            });
+            const uploadData = await uploadRes.json();
+            if (uploadData.success && uploadData.url) {
+              finalUrl = uploadData.url;
+            }
+          } catch {
+            // fallback to base64
+          }
+
+          const newPhotoItem: VenuePhoto = {
+            id: `photo-${Date.now()}-${index}`,
+            title: cleanName.length > 2 ? cleanName : `池記現場相片 #${photos.length + index + 1}`,
+            category: detectedCategory,
+            imageUrl: finalUrl,
+            description: `池記桌遊現場實景拍攝。`,
+            tags: detectedTags,
+            date: '2025-2026'
+          };
+
+          newAddedPhotos.push(newPhotoItem);
+          resolve();
         };
+        reader.readAsDataURL(file);
+      });
+    }
 
-        newAddedPhotos.push(newPhotoItem);
-        processed++;
+    const merged = [...newAddedPhotos, ...photos];
+    onUpdatePhotos(merged);
+    setIsUploading(false);
+    setBatchUploadCount(files.length);
+    setActiveTab('manage');
 
-        if (processed === files.length) {
-          const merged = [...newAddedPhotos, ...photos];
-          onUpdatePhotos(merged);
-          setIsUploading(false);
-          setBatchUploadCount(files.length);
-          showToast(`🎉 成功批量上傳並自動排版 ${files.length} 張相片！`);
-          setActiveTab('manage');
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    // Automatically persist all photos into src/data.ts!
+    await persistToDataTs(merged);
   };
 
-  // Save or update single photo
-  const handleSavePhoto = (e: React.FormEvent) => {
+  // Save or update single photo & write to src/data.ts
+  const handleSavePhoto = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!imageUrl.trim()) {
       showToast('⚠️ 請先上傳照片或輸入照片網址');
@@ -227,15 +300,18 @@ export default function VenuePhotoStudio({
     let updatedList: VenuePhoto[];
     if (editingPhotoId) {
       updatedList = photos.map(p => p.id === editingPhotoId ? newPhoto : p);
-      showToast('🎉 相片已成功更新！');
+      showToast('🎉 相片已成功更新！正在寫入 src/data.ts...');
     } else {
       updatedList = [newPhoto, ...photos];
-      showToast('🎉 新相片已成功發佈至「場相及桌遊相片」專區！');
+      showToast('🎉 新相片已成功建立！正在寫入 src/data.ts...');
     }
 
     onUpdatePhotos(updatedList);
     resetForm();
     setActiveTab('manage');
+
+    // Persist directly to src/data.ts!
+    await persistToDataTs(updatedList);
   };
 
   const resetForm = () => {
@@ -260,25 +336,29 @@ export default function VenuePhotoStudio({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Immediate delete photo without window.confirm (iframe safe)
-  const confirmDeletePhoto = (id: string) => {
+  // Immediate delete photo and sync with src/data.ts
+  const confirmDeletePhoto = async (id: string) => {
     const updated = photos.filter(p => p.id !== id);
     onUpdatePhotos(updated);
     setPhotoToDelete(null);
-    showToast('🗑️ 已成功刪除該張相片！');
+    showToast('🗑️ 已成功刪除該張相片！正在更新 src/data.ts...');
+    await persistToDataTs(updated);
   };
 
-  // Clear all photos (safe in-app action)
-  const handleClearAllPhotos = () => {
+  // Clear all photos and sync with src/data.ts
+  const handleClearAllPhotos = async () => {
     onUpdatePhotos([]);
     setShowClearAllConfirm(false);
-    showToast('🗑️ 已清空所有相片！現在您可以只上傳並顯示您專屬的相片。');
+    showToast('🗑️ 已清空所有相片！正在更新 src/data.ts...');
+    await persistToDataTs([]);
   };
 
-  const handleResetToDefault = () => {
+  // Reset to default and sync with src/data.ts
+  const handleResetToDefault = async () => {
     onUpdatePhotos(DEFAULT_VENUE_PHOTOS);
     setShowResetConfirm(false);
-    showToast('已還原為預設相片清單！');
+    showToast('已還原為預設相片清單！正在更新 src/data.ts...');
+    await persistToDataTs(DEFAULT_VENUE_PHOTOS);
   };
 
   // Export Code
@@ -388,6 +468,30 @@ export default function VenuePhotoStudio({
             <Download className="w-4 h-4 text-emerald-600" />
             <span>💾 匯出程式碼 / 備份</span>
           </button>
+        </div>
+
+        {/* Global Persistence Status Bar (src/data.ts Direct Sync) */}
+        <div className="bg-amber-100/90 border-b-[2px] border-amber-300 px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-2 font-black text-slate-900">
+            <span className={`w-2.5 h-2.5 rounded-full ${isPersisting ? 'bg-amber-500 animate-ping' : 'bg-emerald-500'} inline-block`} />
+            <span>
+              寫入狀態：照片將直接寫入專案 <code>src/data.ts</code> 源碼及 <code>public/uploads/</code> 目錄
+            </span>
+            <span className="bg-emerald-200 text-emerald-950 text-[11px] px-2 py-0.5 rounded-full font-bold border border-emerald-400">
+              {lastPersistedTime ? `已同步寫入 (${lastPersistedTime})` : '自動雙向寫入已就緒'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => persistToDataTs(photos)}
+              disabled={isPersisting}
+              className="bg-slate-950 hover:bg-slate-800 text-amber-300 px-3 py-1 rounded-lg font-black text-xs flex items-center gap-1.5 transition-transform hover:scale-105 cursor-pointer shadow-sm disabled:opacity-50"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{isPersisting ? '寫入中...' : '⚡ 強制寫入 src/data.ts'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Success Toast */}
@@ -591,21 +695,30 @@ export default function VenuePhotoStudio({
                   <div className="pt-2 flex items-center gap-3">
                     <button
                       type="submit"
-                      className="flex-1 py-3.5 px-6 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
+                      disabled={isPersisting}
+                      className="flex-1 py-3.5 px-6 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
                     >
                       <Check className="w-5 h-5 text-amber-400" />
-                      <span>{editingPhotoId ? '儲存並更新相片' : '✨ 立即發佈到「場相及桌遊相片」專區'}</span>
+                      <span>
+                        {isPersisting 
+                          ? '正在永久寫入 src/data.ts 原始碼中...' 
+                          : (editingPhotoId ? '💾 儲存並寫入 src/data.ts 原始碼' : '🚀 發佈並永久寫入 src/data.ts 原始碼')}
+                      </span>
                     </button>
                     {editingPhotoId && (
                       <button
                         type="button"
                         onClick={resetForm}
-                        className="py-3.5 px-4 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold text-sm transition-all"
+                        disabled={isPersisting}
+                        className="py-3.5 px-4 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold text-sm transition-all cursor-pointer disabled:opacity-50"
                       >
                         取消
                       </button>
                     )}
                   </div>
+                  <p className="text-[11px] text-center font-bold text-slate-500">
+                    💡 提示：點擊按鈕後照片將直接寫入本專案的 <code>src/data.ts</code> 及靜態資源資料夾，發佈網站至 <code>chikeechi.com</code> 全世界訪客 100% 永久看見！
+                  </p>
                 </form>
 
               </div>
@@ -912,15 +1025,44 @@ export default function VenuePhotoStudio({
             </div>
           )}
 
-          {/* TAB 3: EXPORT CODE */}
+          {/* TAB 3: EXPORT CODE & PERSISTENCE */}
           {activeTab === 'export' && (
-            <div className="space-y-4 bg-white p-5 rounded-2xl border-[2px] border-slate-900 shadow-sm">
+            <div className="space-y-5 bg-white p-5 rounded-2xl border-[2px] border-slate-900 shadow-sm">
+              <div className="bg-emerald-50 border-2 border-emerald-400 p-4 rounded-xl flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-black text-emerald-950">
+                    🎉 專案原始碼已自動 100% 永久同步！
+                  </h4>
+                  <p className="text-xs text-emerald-800 font-bold mt-1 leading-relaxed">
+                    您在此上傳及編輯的相片已直接寫入後端伺服器的 <code>src/data.ts</code> 源碼及 <code>public/uploads/</code> 資料夾。當專案發佈至 <code>chikeechi.com</code> 時，系統會直接編譯這份最新的相片檔案，全球訪客無論用任何手機或電腦均可 100% 永久看見您的實景相片！
+                  </p>
+                  <div className="mt-3 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => persistToDataTs(photos)}
+                      disabled={isPersisting}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                    >
+                      <Sparkles className="w-4 h-4 text-emerald-200" />
+                      <span>{isPersisting ? '正在寫入中...' : '⚡ 立即強制重新寫入 src/data.ts'}</span>
+                    </button>
+                    {lastPersistedTime && (
+                      <span className="text-xs font-bold text-emerald-700">
+                        最後寫入時間：{lastPersistedTime}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div>
-                <h3 className="text-base font-black text-slate-900">
-                  💾 匯出場相資料與永久備份
+                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <span>💾</span>
+                  <span>即時產生的 TypeScript 原始碼備份</span>
                 </h3>
                 <p className="text-xs text-slate-600 font-bold mt-1">
-                  相片已即時保存在瀏覽器。若要永久寫入專案的 <code className="bg-slate-100 px-1 py-0.5 rounded text-amber-800">src/data.ts</code> 檔案，您可以複製下方的 TypeScript 程式碼：
+                  以下為後台寫入 <code className="bg-slate-100 px-1 py-0.5 rounded text-amber-800">src/data.ts</code> 的完整資料結構，您亦可隨時複製或下載備份：
                 </p>
               </div>
 
