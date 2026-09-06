@@ -169,10 +169,24 @@ export const PRINTING_SHOWCASE_ITEMS: PrintingShowcase[] = [
 
 export const VENUE_PHOTOS: VenuePhoto[] = [
   {
+    "id": "photo-1788665413487",
+    "title": "池記相片 ‧ 桌遊藏書",
+    "category": "boardgames",
+    "imageUrl": "/venue-boardgames.jpg",
+    "description": "池記500+款桌遊藏書牆與熱門派對遊戲實景。",
+    "tags": [
+      "桌遊相片",
+      "精選遊戲",
+      "池記桌遊"
+    ],
+    "featured": false,
+    "date": "2026"
+  },
+  {
     "id": "photo-venue-2",
-    "title": "池記相片 ‧ 2026 02 19 11.36.27",
+    "title": "池記相片",
     "category": "main_hall",
-    "imageUrl": "/venue-user-2.jpg",
+    "imageUrl": "/venue-mahjong-plant.jpg",
     "description": "池記桌遊大場實拍，綠植造景牆、電動麻雀機與電視影音專區。",
     "tags": [
       "池記桌遊",
@@ -185,7 +199,7 @@ export const VENUE_PHOTOS: VenuePhoto[] = [
     "id": "photo-venue-1",
     "title": "大場 ‧ 池記現場實景 (2026 02 19)",
     "category": "main_hall",
-    "imageUrl": "/venue-user-1.jpg",
+    "imageUrl": "/venue-cat-table.jpg",
     "description": "池記桌遊大場實景拍攝，舒適長桌與齊全桌遊設施。",
     "tags": [
       "大場",

@@ -1086,6 +1086,17 @@ export default function VenuePhotoStudio({
                           <img 
                             src={photo.imageUrl} 
                             alt={photo.title} 
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              const fallbackUrl = (photo.imageUrl && (photo.imageUrl.includes('1bg') || photo.category === 'boardgames' || photo.imageUrl.includes('boardgames')))
+                                ? '/venue-boardgames.jpg'
+                                : (photo.imageUrl && (photo.imageUrl.includes('mahjong') || photo.imageUrl.includes('plant') || photo.imageUrl.includes('2')))
+                                ? '/venue-mahjong-plant.jpg'
+                                : '/venue-cat-table.jpg';
+                              if (target.src !== window.location.origin + fallbackUrl) {
+                                target.src = fallbackUrl;
+                              }
+                            }}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           <div className="absolute top-2 left-2 flex items-center gap-1">

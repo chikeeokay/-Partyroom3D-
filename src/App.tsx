@@ -125,7 +125,7 @@ export default function App() {
   // Venue Photos State (Initializes directly from src/data.ts DEFAULT_VENUE_PHOTOS, with cache sanitization)
   const [venuePhotos, setVenuePhotos] = useState<VenuePhoto[]>(() => {
     try {
-      const cached = localStorage.getItem('chikee_venue_photos_v4');
+      const cached = localStorage.getItem('chikee_venue_photos_v6');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -149,7 +149,7 @@ export default function App() {
         if (Array.isArray(data) && data.length > 0) {
           setVenuePhotos(data);
           try {
-            localStorage.setItem('chikee_venue_photos_v4', JSON.stringify(data));
+            localStorage.setItem('chikee_venue_photos_v6', JSON.stringify(data));
           } catch {}
         }
       })
@@ -161,7 +161,7 @@ export default function App() {
   const handleUpdateVenuePhotos = (newPhotos: VenuePhoto[]) => {
     setVenuePhotos(newPhotos);
     try {
-      localStorage.setItem('chikee_venue_photos_v4', JSON.stringify(newPhotos));
+      localStorage.setItem('chikee_venue_photos_v6', JSON.stringify(newPhotos));
     } catch (e) {
       console.warn('Failed to save venue photos to storage', e);
     }

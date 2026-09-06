@@ -216,8 +216,13 @@ export default function VenueSection({
                         alt={photo.title}
                         onError={(e) => {
                           const target = e.currentTarget;
-                          if (target.src !== window.location.origin + '/venue-user-1.jpg') {
-                            target.src = '/venue-user-1.jpg';
+                          const fallbackUrl = (photo.imageUrl && (photo.imageUrl.includes('1bg') || photo.category === 'boardgames' || photo.imageUrl.includes('boardgames')))
+                            ? '/venue-boardgames.jpg'
+                            : (photo.imageUrl && (photo.imageUrl.includes('mahjong') || photo.imageUrl.includes('plant') || photo.imageUrl.includes('2')))
+                            ? '/venue-mahjong-plant.jpg'
+                            : '/venue-cat-table.jpg';
+                          if (target.src !== window.location.origin + fallbackUrl) {
+                            target.src = fallbackUrl;
                           }
                         }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -326,8 +331,13 @@ export default function VenueSection({
                 alt={currentLightboxPhoto.title}
                 onError={(e) => {
                   const target = e.currentTarget;
-                  if (target.src !== window.location.origin + '/venue-user-1.jpg') {
-                    target.src = '/venue-user-1.jpg';
+                  const fallbackUrl = (currentLightboxPhoto.imageUrl && (currentLightboxPhoto.imageUrl.includes('1bg') || currentLightboxPhoto.category === 'boardgames' || currentLightboxPhoto.imageUrl.includes('boardgames')))
+                    ? '/venue-boardgames.jpg'
+                    : (currentLightboxPhoto.imageUrl && (currentLightboxPhoto.imageUrl.includes('mahjong') || currentLightboxPhoto.imageUrl.includes('plant') || currentLightboxPhoto.imageUrl.includes('2')))
+                    ? '/venue-mahjong-plant.jpg'
+                    : '/venue-cat-table.jpg';
+                  if (target.src !== window.location.origin + fallbackUrl) {
+                    target.src = fallbackUrl;
                   }
                 }}
                 className="max-h-[60vh] max-w-full object-contain"
