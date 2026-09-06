@@ -125,17 +125,11 @@ export default function App() {
   // Venue Photos State (Initializes directly from src/data.ts DEFAULT_VENUE_PHOTOS, with cache sanitization)
   const [venuePhotos, setVenuePhotos] = useState<VenuePhoto[]>(() => {
     try {
-      const cached = localStorage.getItem('chikee_venue_photos');
+      const cached = localStorage.getItem('chikee_venue_photos_v4');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Fix any stale/broken /uploads/ URLs pointing to missing files from local storage
-          return parsed.map((p: VenuePhoto) => {
-            if (p.imageUrl && (p.imageUrl.startsWith('/uploads/venue-main_hall') || p.imageUrl === '/uploads/')) {
-              return { ...p, imageUrl: DEFAULT_VENUE_PHOTOS[0]?.imageUrl || '/venue-user-1.jpg' };
-            }
-            return p;
-          });
+          return parsed;
         }
       }
     } catch (e) {
@@ -155,7 +149,7 @@ export default function App() {
         if (Array.isArray(data) && data.length > 0) {
           setVenuePhotos(data);
           try {
-            localStorage.setItem('chikee_venue_photos', JSON.stringify(data));
+            localStorage.setItem('chikee_venue_photos_v4', JSON.stringify(data));
           } catch {}
         }
       })
@@ -167,7 +161,7 @@ export default function App() {
   const handleUpdateVenuePhotos = (newPhotos: VenuePhoto[]) => {
     setVenuePhotos(newPhotos);
     try {
-      localStorage.setItem('chikee_venue_photos', JSON.stringify(newPhotos));
+      localStorage.setItem('chikee_venue_photos_v4', JSON.stringify(newPhotos));
     } catch (e) {
       console.warn('Failed to save venue photos to storage', e);
     }
