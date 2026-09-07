@@ -1,5 +1,6 @@
 import React from 'react';
 import { MessageCircle, MapPin, Navigation, Clock, Phone, ExternalLink } from 'lucide-react';
+import { trackWhatsAppClick, trackMapClick } from '../utils/analytics';
 
 interface PricingInfoBoardProps {
   onOpenWhatsApp?: () => void;
@@ -9,6 +10,7 @@ export const CHI_KEE_GOOGLE_MAPS_URL = 'https://www.google.com/maps/place/%E6%B1
 
 export default function PricingInfoBoard({ onOpenWhatsApp }: PricingInfoBoardProps) {
   const handleWhatsApp = () => {
+    trackWhatsAppClick('pricing_board', '價目表WhatsApp預約留枱');
     if (onOpenWhatsApp) {
       onOpenWhatsApp();
     } else {
@@ -17,6 +19,7 @@ export default function PricingInfoBoard({ onOpenWhatsApp }: PricingInfoBoardPro
   };
 
   const handleOpenGoogleMaps = () => {
+    trackMapClick();
     window.open(CHI_KEE_GOOGLE_MAPS_URL, '_blank');
   };
 

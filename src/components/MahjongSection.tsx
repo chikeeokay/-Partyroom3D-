@@ -1,14 +1,17 @@
 import React from 'react';
 import { MAHJONG_RULES } from '../data';
 import { HelpCircle, ChevronRight, MessageCircle, RefreshCw, Smile, ShieldAlert, Award } from 'lucide-react';
+import { trackWhatsAppClick } from '../utils/analytics';
 
 export default function MahjongSection() {
   const handleJoinClass = () => {
+    trackWhatsAppClick('mahjong_class', '報名台牌教學體驗日');
     const msg = `您好池記！我想報名參加「池記台牌教學體驗日」！\n\n人數：1位 (HK$90)\n特色：即場學港式台牌番數，齊四人開班！\n\n請拉我入預約班，謝謝！🀄🦊`;
     window.open(`https://wa.me/85293737819?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   const handleJoinValley = () => {
+    trackWhatsAppClick('mahjong_group', '加入台牌口水谷');
     const msg = `您好池記！我聽說了「池記輕鬆打台牌谷」！我想申請入谷！\n我支持「口水輕鬆玩、不發脾氣、包容新手」的群規！請拉我入群，謝謝！🀄🎲`;
     window.open(`https://wa.me/85293737819?text=${encodeURIComponent(msg)}`, '_blank');
   };

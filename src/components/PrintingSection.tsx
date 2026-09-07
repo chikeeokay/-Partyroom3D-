@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Cpu, Printer, Wrench, ShieldCheck, MessageCircle, ArrowRight, Layers, PenTool, ExternalLink } from 'lucide-react';
+import { trackWhatsAppClick } from '../utils/analytics';
 
 export default function PrintingSection() {
   // Service inquiry state
@@ -9,6 +10,7 @@ export default function PrintingSection() {
 
   const handleInquiry = (e: React.FormEvent) => {
     e.preventDefault();
+    trackWhatsAppClick('printing_form', `3D打印維修表單諮詢: ${serviceType}`);
     
     let label = '';
     let extra = '';

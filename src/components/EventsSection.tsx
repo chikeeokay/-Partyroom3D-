@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BoardGameEvent } from '../types';
 import { BOARD_GAME_EVENTS as DEFAULT_EVENTS } from '../data';
 import { MessageCircle, Star, Calendar, Clock, DollarSign, ArrowRight, Sparkles, Plus, Image as ImageIcon, ZoomIn, X } from 'lucide-react';
+import { trackEventRegistrationClick } from '../utils/analytics';
 
 interface EventsSectionProps {
   events?: BoardGameEvent[];
@@ -15,6 +16,7 @@ export default function EventsSection({
   const [selectedPoster, setSelectedPoster] = useState<BoardGameEvent | null>(null);
   
   const handleRegisterEvent = (eventTitle: string) => {
+    trackEventRegistrationClick(eventTitle);
     const msg = `您好池記！我想報名參加這個活動：\n\n🎯 活動：${eventTitle}\n\n請幫我預留名額，並告知入數/付款安排，謝謝！🦊`;
     const url = `https://wa.me/85293737819?text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank');

@@ -32,6 +32,7 @@ import CatMilkCard from './components/CatMilkCard';
 import { BoardGameEvent, VenuePhoto } from './types';
 import { BOARD_GAME_EVENTS as DEFAULT_EVENTS, VENUE_PHOTOS as DEFAULT_VENUE_PHOTOS } from './data';
 import { Lock, LogOut, ShieldCheck } from 'lucide-react';
+import { trackWhatsAppClick, trackGAEvent } from './utils/analytics';
 
 interface FAQItem {
   question: string;
@@ -192,10 +193,12 @@ export default function App() {
   }, []);
 
   const handleGeneralWhatsApp = () => {
+    trackWhatsAppClick('navbar_or_hero', '一般WhatsApp查詢');
     window.open('https://wa.me/85293737819?text=您好！我想向池記桌遊查詢場地、台牌教學及3D打印，謝謝！', '_blank');
   };
 
   const handleJoinGroup = () => {
+    trackWhatsAppClick('community_group', '加入池記桌遊WhatsApp群組');
     const msg = `您好池記！我想加入「池記桌遊交友活動 WhatsApp 群」！請拉我入群，我想和大家一起開團玩桌遊！🎲🦊`;
     window.open(`https://wa.me/85293737819?text=${encodeURIComponent(msg)}`, '_blank');
   };
