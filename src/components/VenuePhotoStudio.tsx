@@ -1088,6 +1088,10 @@ export default function VenuePhotoStudio({
                             alt={photo.title} 
                             onError={(e) => {
                               const target = e.currentTarget;
+                              if (target.src.includes('/uploads/')) {
+                                target.src = target.src.replace('/uploads/', '/');
+                                return;
+                              }
                               const fallbackUrl = (photo.imageUrl && (photo.imageUrl.includes('1bg') || photo.category === 'boardgames' || photo.imageUrl.includes('boardgames')))
                                 ? '/venue-boardgames.jpg'
                                 : (photo.imageUrl && (photo.imageUrl.includes('mahjong') || photo.imageUrl.includes('plant') || photo.imageUrl.includes('2')))

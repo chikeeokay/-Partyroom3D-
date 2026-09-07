@@ -216,6 +216,11 @@ export default function VenueSection({
                         alt={photo.title}
                         onError={(e) => {
                           const target = e.currentTarget;
+                          // If /uploads/xxx failed, try /xxx directly
+                          if (target.src.includes('/uploads/')) {
+                            target.src = target.src.replace('/uploads/', '/');
+                            return;
+                          }
                           const fallbackUrl = (photo.imageUrl && (photo.imageUrl.includes('1bg') || photo.category === 'boardgames' || photo.imageUrl.includes('boardgames')))
                             ? '/venue-boardgames.jpg'
                             : (photo.imageUrl && (photo.imageUrl.includes('mahjong') || photo.imageUrl.includes('plant') || photo.imageUrl.includes('2')))
@@ -331,6 +336,11 @@ export default function VenueSection({
                 alt={currentLightboxPhoto.title}
                 onError={(e) => {
                   const target = e.currentTarget;
+                  // If /uploads/xxx failed, try /xxx directly
+                  if (target.src.includes('/uploads/')) {
+                    target.src = target.src.replace('/uploads/', '/');
+                    return;
+                  }
                   const fallbackUrl = (currentLightboxPhoto.imageUrl && (currentLightboxPhoto.imageUrl.includes('1bg') || currentLightboxPhoto.category === 'boardgames' || currentLightboxPhoto.imageUrl.includes('boardgames')))
                     ? '/venue-boardgames.jpg'
                     : (currentLightboxPhoto.imageUrl && (currentLightboxPhoto.imageUrl.includes('mahjong') || currentLightboxPhoto.imageUrl.includes('plant') || currentLightboxPhoto.imageUrl.includes('2')))
