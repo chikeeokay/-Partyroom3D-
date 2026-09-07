@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://chikeechi.com/</loc>
+    <lastmod>2026-09-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://chikeechi.com/venue-boardgames.jpg</image:loc>
+      <image:title>池記桌遊 600+款正版桌遊藏書牆實景</image:title>
+      <image:caption>荔枝角池記桌遊現場實景、超過600款桌遊收藏與專業教學指導</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chikeechi.com/venue-mahjong-plant.jpg</image:loc>
+      <image:title>池記桌遊 麻雀房專區 3張電動麻雀枱</image:title>
+      <image:caption>3張電動麻雀枱專打台式細牌、綠植造景打卡牆與Switch電視遊戲專區</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chikeechi.com/venue-cat-table.jpg</image:loc>
+      <image:title>池記桌遊 700實呎 Partyroom 與多功能聚會活動場地</image:title>
+      <image:caption>700實呎暢玩不計時任飲、朋友聚會、生日派對、Team Building及店貓互動空間</image:caption>
+    </image:image>
+  </url>
+</urlset>

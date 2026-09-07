@@ -27,6 +27,7 @@ import PosterUploaderStudio from './components/PosterUploaderStudio';
 import VenuePhotoStudio from './components/VenuePhotoStudio';
 import AdminLoginModal from './components/AdminLoginModal';
 import PricingInfoBoard, { CHI_KEE_GOOGLE_MAPS_URL } from './components/PricingInfoBoard';
+import AboutVenueIntroduction from './components/AboutVenueIntroduction';
 import CatMilkCard from './components/CatMilkCard';
 import { BoardGameEvent, VenuePhoto } from './types';
 import { BOARD_GAME_EVENTS as DEFAULT_EVENTS, VENUE_PHOTOS as DEFAULT_VENUE_PHOTOS } from './data';
@@ -407,6 +408,12 @@ export default function App() {
             >
               <div className="px-4 pt-2 pb-6 space-y-3 font-black text-xs text-slate-700">
                 <button 
+                  onClick={() => scrollToSection('about-venue')}
+                  className="w-full text-left px-3 py-2.5 rounded-xl bg-amber-100/70 hover:bg-amber-100 text-slate-950 font-black transition-all flex items-center gap-2 border border-amber-300"
+                >
+                  <span>🎉</span> 場地簡介 (Partyroom / 麻雀房)
+                </button>
+                <button 
                   onClick={() => scrollToSection('venue')}
                   className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-amber-50 hover:text-amber-600 transition-all flex items-center gap-2"
                 >
@@ -499,6 +506,9 @@ export default function App() {
         
         <PricingInfoBoard onOpenWhatsApp={handleGeneralWhatsApp} />
       </section>
+
+      {/* SECTION: ABOUT VENUE INTRODUCTION (Partyroom / 活動場地租用 / 麻雀房租用 / 聚會場地 / Boardgame) */}
+      <AboutVenueIntroduction onOpenWhatsApp={handleGeneralWhatsApp} />
 
       {/* SECTION 1: VENUE & BOARD GAME PHOTOS (Upload studio only available for logged-in Admin) */}
       <VenueSection 
