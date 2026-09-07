@@ -169,6 +169,162 @@ export const PRINTING_SHOWCASE_ITEMS: PrintingShowcase[] = [
 
 export const VENUE_PHOTOS: VenuePhoto[] = [
   {
+    "id": "photo-1788741719463-0",
+    "title": "任天堂 Switch 打機專區",
+    "category": "main_hall",
+    "imageUrl": "/uploads/venue-main_hall-1788741716118-8199.jpg",
+    "description": "池記桌遊現場實景拍攝。",
+    "tags": [
+      "池記桌遊",
+      "場地實景"
+    ],
+    "date": "2025-2026"
+  },
+  {
+    "id": "photo-1788741720390-1",
+    "title": "大場 700實呎空間",
+    "category": "main_hall",
+    "imageUrl": "/uploads/venue-main_hall-1788741717075-2716.jpg",
+    "description": "池記桌遊現場實景拍攝。",
+    "tags": [
+      "池記桌遊",
+      "場地實景"
+    ],
+    "date": "2025-2026"
+  },
+  {
+    "id": "photo-1788741721243-2",
+    "title": "池記精選桌遊藏書",
+    "category": "boardgames",
+    "imageUrl": "/uploads/venue-boardgames-1788741717929-2836.jpg",
+    "description": "池記桌遊現場實景拍攝。",
+    "tags": [
+      "桌遊相片",
+      "精選遊戲"
+    ],
+    "date": "2025-2026"
+  },
+  {
+    "id": "photo-1788741739347-3",
+    "title": "桌遊3",
+    "category": "boardgames",
+    "imageUrl": "/uploads/venue-boardgames-1788741736012-5167.jpg",
+    "description": "池記桌遊現場實景拍攝。",
+    "tags": [
+      "桌遊相片",
+      "精選遊戲"
+    ],
+    "date": "2025-2026"
+  },
+  {
+    "id": "photo-1788741766842-4",
+    "title": "桌遊7",
+    "category": "boardgames",
+    "imageUrl": "/uploads/venue-boardgames-1788741763527-8066.jpg",
+    "description": "池記桌遊現場實景拍攝。",
+    "tags": [
+      "桌遊相片",
+      "精選遊戲"
+    ],
+    "date": "2025-2026"
+  },
+  {
+    "id": "photo-1788741768594-5",
+    "title": "桌遊8",
+    "category": "boardgames",
+    "imageUrl": "/uploads/venue-boardgames-1788741765254-2958.jpg",
+    "description": "池記桌遊現場實景拍攝。",
+    "tags": [
+      "桌遊相片",
+      "精選遊戲"
+    ],
+    "date": "2025-2026"
+  },
+  {
+    "id": "photo-1788741771030-6",
+    "title": "桌遊9",
+    "category": "boardgames",
+    "imageUrl": "/uploads/venue-boardgames-1788741767725-6664.jpg",
+    "description": "池記桌遊現場實景拍攝。",
+    "tags": [
+      "桌遊相片",
+      "精選遊戲"
+    ],
+    "date": "2025-2026"
+  },
+  {
+    "id": "photo-1788741788779-7",
+    "title": "桌遊10",
+    "category": "boardgames",
+    "imageUrl": "/uploads/venue-boardgames-1788741785447-4218.jpg",
+    "description": "池記桌遊現場實景拍攝。",
+    "tags": [
+      "桌遊相片",
+      "精選遊戲"
+    ],
+    "date": "2025-2026"
+  },
+  {
+    "id": "photo-1788741790659-8",
+    "title": "桌遊11",
+    "category": "boardgames",
+    "imageUrl": "/uploads/venue-boardgames-1788741787348-2368.jpg",
+    "description": "池記桌遊現場實景拍攝。",
+    "tags": [
+      "桌遊相片",
+      "精選遊戲"
+    ],
+    "date": "2025-2026"
+  },
+  {
+    "id": "photo-1788741793849-10",
+    "title": "桌遊12",
+    "category": "boardgames",
+    "imageUrl": "/uploads/venue-boardgames-1788741790529-3200.jpg",
+    "description": "池記桌遊現場實景拍攝。",
+    "tags": [
+      "桌遊相片",
+      "精選遊戲"
+    ],
+    "date": "2025-2026"
+  },
+  {
+    "id": "photo-1788741796339-11",
+    "title": "桌遊16",
+    "category": "boardgames",
+    "imageUrl": "/uploads/venue-boardgames-1788741793029-6765.jpg",
+    "description": "池記桌遊現場實景拍攝。",
+    "tags": [
+      "桌遊相片",
+      "精選遊戲"
+    ],
+    "date": "2025-2026"
+  },
+  {
+    "id": "photo-1788741797459-12",
+    "title": "電動麻雀 ‧ 越南百搭",
+    "category": "main_hall",
+    "imageUrl": "/uploads/venue-main_hall-1788741794150-1486.jpg",
+    "description": "池記桌遊現場實景拍攝。",
+    "tags": [
+      "池記桌遊",
+      "場地實景"
+    ],
+    "date": "2025-2026"
+  },
+  {
+    "id": "photo-1788741798983-13",
+    "title": "電動日式麻雀機",
+    "category": "main_hall",
+    "imageUrl": "/uploads/venue-main_hall-1788741795671-7181.jpg",
+    "description": "池記桌遊現場實景拍攝。",
+    "tags": [
+      "池記桌遊",
+      "場地實景"
+    ],
+    "date": "2025-2026"
+  },
+  {
     "id": "photo-1788665413487",
     "title": "池記相片 ‧ 桌遊藏書",
     "category": "boardgames",
